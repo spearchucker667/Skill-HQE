@@ -178,5 +178,39 @@ class FindingRegistry:
             counts[f.severity] = counts.get(f.severity, 0) + 1
         return counts
 
+    def health_score(self) -> int:
+        """Return 1-10 health score weighted by severity counts.
+
+        The protocol rubric maps 1-2 to Broken, 3-4 to Unstable, 5-6 to Fragile,
+        7-8 to Solid, and 9-10 to Production-ready. This method returns a
+        numeric score in the same 1-10 range so it can be embedded directly in
+        the run manifest.
+        """
+        if not self.findings:
+            return 10
+
+        weights = {
+            "CRITICAL": -25,
+            "HIGH": -15,
+            "MEDIUM": -8,
+            "LOW": -3,
+            "INFO": 0
+        }
+        counts = self.count_by_severity()
+        penalty = sum(weights.get(sev, 0) * count for sev, count in counts.items())
+        raw = 100 + penalty
+        score = max(1, min(100, raw))
+
+        # Map 0-100 to 1-10 rubric used by the run manifest.
+        if score >= 90:
+            return 10
+        if score >= 75:
+            return 8
+        if score >= 55:
+            return 6
+        if score >= 30:
+            return 4
+        return 2
+
     def to_list(self) -> list[dict[str, Any]]:
         return [f.to_dict() for f in self.findings.values()]

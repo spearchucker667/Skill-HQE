@@ -19,7 +19,8 @@ Only the current main branch and latest released tagged versions receive active 
 
 We specifically welcome security reports concerning:
 - **Prompt Injection Bypasses**: Scenarios where untrusted repository content causes an agent executing the HQE skill to bypass safety rules.
-- **Unsafe Script Execution**: Flaws in `scripts/inventory_repo.py`, `scripts/validate_findings.py`, or `scripts/check_skill.py`.
+- **Unsafe Script Execution**: Flaws in `scripts/inventory_repo.py`, `scripts/validate_findings.py`, `scripts/local_risk_scan.py`, or `scripts/check_skill.py`.
+- **Path Traversal or Archive Escapes**: Bugs that allow a scanned repository or release package to read/write outside the intended directory.
 - **Schema Validation Gaps**: Weaknesses in JSON schemas that allow malicious or malformed finding payloads to bypass validation.
 
 ---

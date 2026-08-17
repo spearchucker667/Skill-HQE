@@ -1,0 +1,14 @@
+{
+  "title": "Q3 Security Remediation",
+  "findings": ["HQE-SEC-001", "HQE-SEC-002"],
+  "phases": [
+    {
+      "phase": "Containment",
+      "objective": "Stop secret leakage",
+      "actions": ["Rotate keys", "Remove from history"],
+      "exit_criteria": ["No active secrets exposed"]
+    }
+  ],
+  "patches": [],
+  "verification": ["python scripts/local_risk_scan.py ."]
+}

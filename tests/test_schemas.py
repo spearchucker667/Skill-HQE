@@ -80,3 +80,33 @@ def test_report_schema_fixture():
 
     registry = Registry().with_resource("finding.schema.json", Resource.from_contents(finding_schema))
     validate(instance=data, schema=report_schema, registry=registry)
+
+
+def test_incident_mini_report_fixture():
+    schema = _load_schema("incident-mini-report.schema.json")
+    data = _load_fixture("sample_incident_mini_report.json")
+    validate(instance=data, schema=schema)
+
+
+def test_patch_action_fixture():
+    schema = _load_schema("patch-action.schema.json")
+    data = _load_fixture("sample_patch_action.json")
+    validate(instance=data, schema=schema)
+
+
+def test_quick_wins_vs_structural_fixture():
+    schema = _load_schema("quick-wins-vs-structural.schema.json")
+    data = _load_fixture("sample_quick_wins_vs_structural.json")
+    validate(instance=data, schema=schema)
+
+
+def test_remediation_plan_fixture():
+    schema = _load_schema("remediation-plan.schema.json")
+    data = _load_fixture("sample_remediation_plan.json")
+    validate(instance=data, schema=schema)
+
+
+def test_validation_report_fixture():
+    schema = _load_schema("validation-report.schema.json")
+    data = _load_fixture("sample_validation_report.json")
+    validate(instance=data, schema=schema)

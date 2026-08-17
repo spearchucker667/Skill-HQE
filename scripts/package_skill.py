@@ -104,8 +104,17 @@ def package_skill(source_dir: Path, output_zip: Path) -> dict:
                     continue
 
                 abs_file = Path(current_root) / f
+                # Safety: ensure the absolute file is still within the source tree
+                try:
+                    abs_file.resolve().relative_to(src)
+                except ValueError:
+                    continue
+
                 # Normalize zip archive entry name (always forward slashes)
                 archive_name = f"Skill-HQE/{rel_file}"
+                if archive_name.startswith("Skill-HQE/../") or "/../" in archive_name:
+                    continue
+
                 zf.write(abs_file, arcname=archive_name)
                 packaged_files.append(archive_name)
 

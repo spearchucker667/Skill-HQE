@@ -1,35 +1,40 @@
 # HQE Engineer Protocol
 
-This folder contains the HQE Engineer protocol definition and its validation schema.
+This folder contains the canonical HQE Engineer protocol definition and its validation schema.
 
 ## Files
 
-- `hqe-engineer.yaml` - Protocol source of truth (YAML)
-- `hqe-schema.json` - JSON schema used by validators and tooling
-- `verify.py` / `validate.py` - Python validation scripts
+- `hqe-engineer.yaml` - Active protocol source of truth (YAML)
+- `hqe-engineer-schema.json` - JSON Schema Draft 2020-12 specification for the protocol YAML
+- `hqe-schema.json` - JSON schema used by `verify.py` and tooling
+- `validate.py` - Canonical protocol validator with semantic linting
+- `verify.py` - Standalone verbose verifier with structured error output
 - `VALIDATORS.md` - Notes on validation and versioning
-- `archive/` - Prior protocol versions and historical docs
+- `HQE_v5_MIGRATION_NOTES.md` - v5.0.0 migration notes
+- `SOURCE_CHECKSUMS.sha256` - SHA-256 checksums of canonical protocol files
 
 ## Validate Locally
 
-From repo root:
+From the repository root:
 
 ```bash
-./scripts/validate_protocol.sh
-```
+# Validate the protocol YAML against its schema
+python3 protocol/validate.py protocol/hqe-engineer.yaml
 
-Or via the CLI:
+# Validate the schema itself
+python3 protocol/validate.py --schema
 
-```bash
-cargo build --release -p hqe
-./target/release/hqe validate-protocol
+# Validate the full protocol bundle
+python3 scripts/validate_protocol_bundle.py
+
+# Verify canonical checksums
+python3 scripts/check_protocol_sync.py
 ```
 
 Notes:
-- If Python is installed without `pyyaml`/`jsonschema`, the CLI will fall back to basic syntax validation.
-- CI installs Python dependencies so full schema validation runs there.
-
-
+- Python 3.10+ is required.
+- Install dev dependencies with `pip install -e ".[dev]"` or `pip install -r requirements-dev.txt`.
+- CI runs the same validators on every push and pull request.
 
 ## HQE Protocol v5.0.0 Updates
 

@@ -511,6 +511,8 @@ HQE_REDACTION_LOG.json
 HQE_REMEDIATION_PLAN.md
 HQE_VALIDATION.md
 HQE_HANDOFF.md
+LIVE_PARITY_AUDIT_2026-08-17.md
+2026-08-17-hqe-live-repository-parity-audit-remediation.md
 
 # Generated artifact/output directories
 artifacts/
@@ -557,6 +559,7 @@ package/
 packages/
 staging/
 stage/
+/superpowers
 
 
 # -----------------------------------------------------------------------------
@@ -717,6 +720,9 @@ HQE_HANDOFF.md
 # Development generated scratchpads
 development/generated/*
 !development/generated/.gitkeep
+
+# Development audit reports (keep historical reports; ignore newly generated ones)
+development/audits/*.md
 
 # Temporary and backup files
 *.tmp

@@ -1,0 +1,7 @@
+[project]
+name = "missing-deps-demo"
+version = "0.1.0"
+dependencies = [
+    "requests>=2.0.0",
+    "nonexistent-package-abc>=1.0.0",
+]

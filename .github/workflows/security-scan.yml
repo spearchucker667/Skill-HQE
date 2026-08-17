@@ -20,5 +20,16 @@ jobs:
 
       - name: Check for Unredacted Secrets
         run: |
-          # Basic scan to ensure no raw API keys or private keys are accidentally committed
-          ! grep -rnE --exclude="*.schema.json" --exclude="test_*.py" "(sk-[a-zA-Z0-9]{32,}|BEGIN PRIVATE KEY)" .
+          matches=$(grep -rnE \
+            --exclude="*.schema.json" \
+            --exclude="test_*.py" \
+            --exclude="security-scan.yml" \
+            --exclude-dir="superpowers" \
+            "(sk-[a-zA-Z0-9]{32,}|BEGIN PRIVATE KEY)" \
+            . || true)
+
+          if [ -n "$matches" ]; then
+            echo "Potential secret(s) found:"
+            echo "$matches"
+            exit 1
+          fi

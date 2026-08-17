@@ -1,0 +1,9 @@
+{
+  "finding_id": "HQE-BUG-002",
+  "files": ["src/utils.py"],
+  "exact_intended_change": "Add null check before dereferencing user profile",
+  "patch": "diff --git a/src/utils.py b/src/utils.py\n+ if user is None:\n+     return None",
+  "validation": ["pytest tests/test_utils.py"],
+  "expected_result": "Null input test passes",
+  "rollback": ["git checkout src/utils.py"]
+}

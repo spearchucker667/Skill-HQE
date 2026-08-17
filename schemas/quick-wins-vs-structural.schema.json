@@ -1,0 +1,66 @@
+{
+  "title": "HQE Quick Wins vs Structural Work",
+  "type": "object",
+  "properties": {
+    "quick_wins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "effort": {
+            "type": "string",
+            "enum": ["S"]
+          },
+          "affected_component": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_id",
+          "title",
+          "effort"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "structural_work": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "effort": {
+            "type": "string",
+            "enum": ["M", "L"]
+          },
+          "affected_component": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_id",
+          "title",
+          "effort"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "quick_wins",
+    "structural_work"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

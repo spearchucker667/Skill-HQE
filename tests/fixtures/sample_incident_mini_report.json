@@ -1,0 +1,10 @@
+{
+  "incident_id": "HQE-SEC-001",
+  "impacted_paths": ["src/auth.py", "config/secrets.toml"],
+  "evidence": ["Hardcoded API key at src/auth.py:42"],
+  "indicators": ["sk- prefix token committed to version control"],
+  "containment": ["Rotate exposed key", "Remove key from history"],
+  "safe_verification": ["grep -rn 'sk-' src/"],
+  "blockers": ["Requires access to key management service"],
+  "resume_criteria": ["No unredacted secrets in latest commit"]
+}

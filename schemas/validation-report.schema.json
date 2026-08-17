@@ -1,0 +1,59 @@
+{
+  "title": "HQE Validation Report",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "findings_validated": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "finding_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["VERIFIED", "NOT_VERIFIED", "PARTIAL", "REGRESSION"]
+          },
+          "validation_commands": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected_results": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actual_results": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_id",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "findings_validated"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

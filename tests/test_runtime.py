@@ -13,7 +13,9 @@ from runtime import (
     FindingRegistry, Finding,
     EvidenceStore, CodeEvidence,
     RunManifestGenerator,
-    ArtifactPipeline
+    ArtifactPipeline,
+    TypedRedactionEngine,
+    classify_secret
 )
 
 SCHEMAS = ROOT / "schemas"
@@ -167,9 +169,64 @@ def test_artifact_pipeline_generation():
             "RELIABILITY_SUMMARY.md",
             "TESTING_GAPS.md",
             "UNKNOWNS_VERIFICATION.md",
-            "CONFIDENCE_DECLARATION.md"
+            "CONFIDENCE_DECLARATION.md",
+            "INCIDENT_MINI_REPORT.md",
+            "PATCH_ACTIONS.md",
+            "REMEDIATION_PLAN.md",
+            "VALIDATION_REPORT.md"
         }
         for ef in expected_files:
             assert ef in artifacts
             assert artifacts[ef].is_file()
             assert len(artifacts[ef].read_text(encoding="utf-8")) > 10
+
+
+def test_health_score_bounds():
+    registry = FindingRegistry()
+    assert registry.health_score() == 10
+
+    ev = CodeEvidence(path="src/x.py", start_line=1, end_line=1, snippet="x")
+    for i in range(5):
+        registry.register(Finding(
+            id=f"HQE-BUG-{i+1:03d}",
+            title=f"Bug {i}",
+            category="BUG",
+            severity="CRITICAL",
+            confidence="FACT",
+            status="CONFIRMED",
+            affected_component="src/x.py",
+            observed_behavior="crash",
+            expected_behavior="ok",
+            root_cause="missing check",
+            impact="high",
+            remediation="add check",
+            effort="S",
+            regression_risk="Low",
+            evidence=[ev],
+            preconditions=["default config"],
+            exploitability="High",
+            blast_radius="System wide",
+            likelihood="High",
+            likelihood_justification="default path",
+            exposure_evidence="src/x.py:1"
+        ))
+    assert registry.health_score() == 2  # maps to Broken band (1-2)
+
+
+def test_typed_redaction_engine():
+    engine = TypedRedactionEngine()
+    text = "key = AKIA1234567890ABCDEF and slack = xoxb-1234567890-123456789012"
+    redacted = engine.redact(text, file_path="config.py")
+    assert "AKIA" not in redacted
+    assert "xoxb-" not in redacted
+    summary = engine.typed_summary()
+    assert summary["total_redactions"] == 2
+    categories = {e["category"] for e in summary["typed_entries"]}
+    assert "api_key" in categories
+    assert "token" in categories
+
+
+def test_classify_secret():
+    assert classify_secret("AKIA1234567890ABCDEF") == "api_key"
+    assert classify_secret("xoxb-1234567890-123456789012") == "token"
+    assert classify_secret("postgres://user:pass@host/db") == "database_url"

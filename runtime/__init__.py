@@ -11,6 +11,7 @@ from .finding_registry import FindingRegistry, Finding
 from .evidence_store import EvidenceStore, CodeEvidence
 from .run_manifest import RunManifestGenerator
 from .artifact_pipeline import ArtifactPipeline
+from .redaction_engine import TypedRedactionEngine, classify_secret
 
 __all__ = [
     "SessionManager",
@@ -21,4 +22,6 @@ __all__ = [
     "CodeEvidence",
     "RunManifestGenerator",
     "ArtifactPipeline",
+    "TypedRedactionEngine",
+    "classify_secret",
 ]

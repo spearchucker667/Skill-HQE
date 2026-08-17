@@ -1,0 +1,14 @@
+{
+  "title": "Post-Remediation Validation",
+  "findings_validated": [
+    {
+      "finding_id": "HQE-BUG-002",
+      "status": "VERIFIED",
+      "validation_commands": ["pytest tests/test_utils.py"],
+      "expected_results": ["All tests pass"],
+      "actual_results": ["All tests pass"],
+      "notes": "Confirmed fix with regression test"
+    }
+  ],
+  "summary": "All targeted fixes verified; zero regressions."
+}

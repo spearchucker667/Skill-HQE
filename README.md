@@ -92,14 +92,14 @@ flowchart TD
     P05 --> Deep
     Deep --> Gate[Severity Gate & Taint Chain Validation]
     Gate --> Runtime[Runtime Engine State Machine & Assembly]
-    Runtime --> Output[Generate HQE_REPORT.md & 9 Deliverables]
+    Runtime --> Output[Generate HQE_REPORT.md & 13 Deliverables]
 ```
 
 1. **Pre-flight & Discovery (Phase 0)**: Automatically inventories all repository files, classifies file types, detects package managers across 22+ ecosystems, discovers existing test commands (`pytest`, `cargo test`, `npm test`), and verifies clean working tree state.
 2. **Large Codebase Triage (Phase 0.5)**: If the repository exceeds 50 files, prioritizes core business logic, public APIs, and security perimeters while documenting explicit coverage bounds.
 3. **Deep Multi-Perspective Audit (Phases 1–4)**: Interleaves security taint tracking, reliability & concurrency analysis, performance profiling, and testing gap evaluation.
 4. **Severity & Likelihood Gating**: Every finding is validated against strict severity gates. High-severity claims without exposure proof are downgraded or marked `[NEEDS_VERIFICATION]`.
-5. **Deterministic Artifact Assembly**: The `runtime/` engine assembles the executive summary (`HQE_REPORT.md`), 9 canonical markdown deliverables, and machine-readable JSON manifests (`HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`).
+5. **Deterministic Artifact Assembly**: The `runtime/` engine assembles the executive summary (`HQE_REPORT.md`), 13 canonical markdown deliverables, machine-readable JSON manifests (`HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`), and a deterministic 1–10 health score derived from finding severity.
 
 ---
 
@@ -110,7 +110,7 @@ flowchart TD
 - 🚦 **Severity Gates & Likelihood Models**: CRITICAL/HIGH findings require explicit preconditions, exploitability, blast radius, and likelihood justification.
 - 🧱 **Architectural Cohesion**: Identification of circular dependencies, boundary leaks, tight coupling, and abstraction violations.
 - 🛠️ **Minimal-Change Remediation**: Surgical root-cause fixes adhering to a strict change budget ($\le 5$ files) and anti-regression rules (`[BEHAVIOR CHANGE]`, `[NEW_DEPENDENCY]`).
-- 📋 **Canonical Deliverable System**: Generates the 9 canonical HQE audit deliverables (Risk Register, Master TODO, Pattern Findings, Quick Wins vs Structural, Security Posture, Reliability, Testing Gaps, Unknowns, Confidence Declaration).
+- 📋 **Canonical Deliverable System**: Generates 13 HQE audit deliverables — Risk Register, Master TODO, Pattern Findings, Quick Wins vs Structural, Security Posture, Reliability, Testing Gaps, Unknowns, Confidence Declaration, Incident Mini-Report, Patch Actions, Remediation Plan, and Validation Report.
 - 🔒 **Prompt Injection Immunity**: Treats all audited code, fixtures, comments, and instructions as passive untrusted data.
 - ⚙️ **Deterministic Control Plane**: Lightweight Python runtime layer (`runtime/`) maintaining finding lifecycles, session persistence, and reproducible run manifests.
 
@@ -138,7 +138,7 @@ Invoke `/HQE` with any of the following 17 specialized operational modes:
 
 | Mode | Command | Objective & Focus Area | Workflow Reference |
 | :--- | :--- | :--- | :--- |
-| **Audit** | `/HQE audit` | Comprehensive repository audit emitting all 9 canonical deliverables. | [`workflows/full-audit.md`](workflows/full-audit.md) |
+| **Audit** | `/HQE audit` | Comprehensive repository audit emitting all 13 canonical deliverables. | [`workflows/full-audit.md`](workflows/full-audit.md) |
 | **Security** | `/HQE security` | Attack surface, trust boundaries, auth logic, and taint chains. | [`workflows/security-audit.md`](workflows/security-audit.md) |
 | **PR Review** | `/HQE pr-review` | Phase -1 diff harvest, changed files, and affected adjacent code. | [`workflows/pr-review.md`](workflows/pr-review.md) |
 | **Targeted** | `/HQE targeted <path>` | Deep dive into a specific subsystem, bug symptom, or suspect file. | [`workflows/targeted-bug-hunt.md`](workflows/targeted-bug-hunt.md) |
@@ -327,7 +327,8 @@ The `runtime/` package brings executable control-plane rigor to Skill-HQE withou
 - **`FindingRegistry`** (`runtime/finding_registry.py`): Invariant enforcement for finding schemas, lifecycle tracking (`CONFIRMED`, `FIXED`, `SUPERSEDED`), and strict severity gate validation.
 - **`EvidenceStore`** (`runtime/evidence_store.py`): Verification of code evidence triads (`path`, line ranges/anchors, snippets) and automated secret redaction.
 - **`RunManifestGenerator`** (`runtime/run_manifest.py`): Deterministic reproducibility logger capturing git state, tool executions, and coverage metrics.
-- **`ArtifactPipeline`** (`runtime/artifact_pipeline.py`): Deterministic assembly engine for the 9 canonical audit deliverables.
+- **`FindingRegistry`** (`runtime/finding_registry.py`): Also computes a deterministic 1–10 health score from severity-weighted finding counts.
+- **`ArtifactPipeline`** (`runtime/artifact_pipeline.py`): Deterministic assembly engine for the 13 canonical audit deliverables.
 
 ---
 

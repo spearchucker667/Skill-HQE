@@ -26,7 +26,10 @@ While `HQE-Workbench` implemented this methodology as a monolithic Tauri/Rust de
 | `scripts/inventory_repo.py` | `crates/hqe-core/src/repo.rs` | Apache-2.0 | Ported file traversal and classification logic |
 | `runtime/` | `crates/hqe-core/`, `crates/hqe-artifacts/` | Apache-2.0 | Re-implemented state machines and artifact builder in pure Python |
 | `references/reasoning-methodologies.md` | `mcp-server/prompts/` | Apache-2.0 | Translated 5W1H, CAGEERF, FOCUS, REACT, SCAMPER prompts |
-| `references/quality-gates.md` | `mcp-server/prompts/server/resources/gates/` | Apache-2.0 | Translated quality evaluation gates |
+| `references/quality-gates.md` | `mcp-server/prompts/server/resources/gates/` | Apache-2.0 | Translated quality evaluation gates (summary form) |
+| `references/gates/` | `mcp-server/prompts/server/resources/gates/` | Apache-2.0 | Per-gate reference documents with activation and retry guidance |
+| `references/methodologies/` | `mcp-server/prompts/server/resources/methodologies/` | Apache-2.0 | Per-methodology reference documents (5W1H, CAGEERF, FOCUS, ReACT, SCAMPER) |
+| `references/methodologies/styles.md` | `mcp-server/prompts/server/resources/styles/` | Apache-2.0 | Translated response style guidance (analytical, creative, procedural, reasoning) |
 | `references/language-guides/` | `mcp-server/prompts/` | Apache-2.0 | Translated language-specific review guides (9 ecosystems) |
 
 ---

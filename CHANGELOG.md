@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- `docs/LIVE_PARITY_AUDIT_2026-08-17.md`: Complete source parity audit against HQE-Workbench.
+- `docs/CAPABILITY_PARITY_MATRIX.md`: Capability-by-capability parity mapping.
+- `docs/artifact-format.md`: Consolidated artifact directory layout and JSON schema specification.
+- Structured methodology resources: `references/gates/` (12 gate docs) and `references/methodologies/` (CAGEERF, FOCUS, 5W1H, REACT, SCAMPER, styles).
+- Runtime health-score computation in `runtime/finding_registry.py`.
+- `runtime/redaction_engine.py`: typed secret taxonomy (`TypedRedactionEngine`, `classify_secret`).
+- Missing artifact schemas: `incident-mini-report`, `patch-action`, `quick-wins-vs-structural`, `remediation-plan`, `validation-report`.
+- Expanded `runtime/artifact_pipeline.py` to emit all 13 canonical deliverables.
+- New test modules: `tests/test_protocol.py`, `tests/test_schema.py`, `tests/test_security.py`.
+- New fixture: `tests/fixtures/missing-deps-fixture/`.
+- Local risk scan hardening: path-traversal guard, prompt-injection marker detection, TODO/FIXME/HACK marker detection.
+
+### Fixed
+- `.github/workflows/security-scan.yml` now reports matching lines on failure.
+- `.github/workflows/validate-skill.yml` now installs dev dependencies before running `check_skill.py`.
+- `protocol/README.md` no longer references non-existent Rust CLI scripts.
+
+### Changed
+- 9 workflow playbooks expanded for depth and consistency (`security-audit`, `targeted-bug-hunt`, `architecture-audit`, `performance-audit`, `dependency-audit`, `documentation-audit`, `testing-audit`, `ci-audit`, `provider-independent-review`).
+- `README.md`, `CONTRIBUTING.md`, `SECURITY.md` updated to reflect current runtime, artifact model, and validation commands.
+
+---
+
 ## [5.0.0] - 2026-08-17
 
 ### Added

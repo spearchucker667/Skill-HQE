@@ -1,0 +1,18 @@
+{
+  "quick_wins": [
+    {
+      "finding_id": "HQE-DOC-001",
+      "title": "Fix README typo",
+      "effort": "S",
+      "affected_component": "README.md"
+    }
+  ],
+  "structural_work": [
+    {
+      "finding_id": "HQE-ARCH-002",
+      "title": "Decouple database access layer",
+      "effort": "L",
+      "affected_component": "src/db/"
+    }
+  ]
+}

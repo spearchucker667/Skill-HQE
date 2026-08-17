@@ -184,8 +184,149 @@ class ArtifactPipeline:
         ]
         return "\n".join(lines) + "\n"
 
+    def generate_incident_mini_report(self) -> str:
+        """Assemble Incident Mini-Report for active security incidents."""
+        sec_incidents = [
+            f for f in self.registry.findings.values()
+            if f.category == "SEC" and f.severity in ("CRITICAL", "HIGH") and f.status != "FIXED"
+        ]
+        lines = [
+            f"# Incident Mini-Report: {self.repo_name}",
+            "",
+            f"**Active Security Incidents:** {len(sec_incidents)}",
+            ""
+        ]
+        if not sec_incidents:
+            lines.append("No active CRITICAL/HIGH security incidents.")
+        for f in sec_incidents:
+            lines.append(f"## {f.id} — {f.title}")
+            lines.append(f"- **Impacted paths:** `{f.affected_component}`")
+            lines.append(f"- **Evidence:** {f.observed_behavior}")
+            if f.taint_chain:
+                lines.append(
+                    f"- **Indicators:** Source `{f.taint_chain.get('source')}` -> "
+                    f"Sink `{f.taint_chain.get('sink')}`"
+                )
+            lines.append(f"- **Containment:** {f.remediation}")
+            lines.append(f"- **Safe verification:** {f.validation or 'See remediation plan'}")
+            lines.append(f"- **Blockers:** {f.reproduction or 'None documented'}")
+            lines.append(f"- **Resume criteria:** Verification commands pass and findings transition to FIXED")
+            lines.append("")
+        return "\n".join(lines) + "\n"
+
+    def generate_patch_actions(self) -> str:
+        """Assemble Patch Actions deliverable for all open findings."""
+        lines = [
+            f"# Patch Actions: {self.repo_name}",
+            "",
+            "One patch per finding with exact intended change, diff, validation, and rollback.",
+            ""
+        ]
+        for f in sorted(self.registry.findings.values(), key=lambda x: x.id):
+            lines.append(f"## {f.id} — {f.title}")
+            lines.append(f"**Files:** `{f.affected_component}`")
+            lines.append(f"**Exact Intended Change:** {f.remediation}")
+            lines.append("**Patch:**")
+            lines.append("```diff")
+            lines.append("# TODO: append minimal diff once change is implemented")
+            lines.append("```")
+            lines.append(f"**Validation:** {f.validation or 'N/A'}")
+            lines.append("**Expected Result:** Finding transitions to FIXED; no regressions.")
+            lines.append("**Rollback:** Revert the diff and re-run validation.")
+            lines.append("")
+        return "\n".join(lines) + "\n"
+
+    def generate_remediation_plan(self) -> str:
+        """Assemble Remediation Plan deliverable."""
+        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        lines = [
+            f"# Remediation Plan: {self.repo_name}",
+            "",
+            f"**Total findings addressed:** {len(open_findings)}",
+            "",
+            "## Findings",
+            "",
+            "| ID | Title | Severity | Effort | Status |",
+            "| :--- | :--- | :--- | :--- | :--- |"
+        ]
+        for f in sorted(open_findings, key=lambda x: (x.severity, x.id)):
+            lines.append(f"| {f.id} | {f.title} | {f.severity} | {f.effort} | {f.status} |")
+
+        lines.extend([
+            "",
+            "## Phases",
+            "",
+            "### Phase 1: Containment / Safety",
+            "",
+            "**Objective:** Stop exploitation paths and prevent regression.",
+            "",
+            "**Actions:**",
+            "- [ ] Address all CRITICAL findings",
+            "- [ ] Add regression tests for HIGH findings",
+            "",
+            "**Exit criteria:**",
+            "- [ ] No CRITICAL findings remain OPEN",
+            "- [ ] CI passes",
+            "",
+            "### Phase 2: Minimal Fixes",
+            "",
+            "**Objective:** Resolve HIGH/MEDIUM findings with smallest safe change.",
+            "",
+            "**Actions:**",
+            "- [ ] Apply patch actions",
+            "",
+            "**Exit criteria:**",
+            "- [ ] All HIGH findings transition to FIXED or DEFERRED",
+            "",
+            "### Phase 3: Verification",
+            "",
+            "**Objective:** Prove fixes work and no regressions introduced.",
+            "",
+            "**Actions:**",
+            "- [ ] Run validation commands from each finding",
+            "",
+            "**Exit criteria:**",
+            "- [ ] All validation commands pass",
+            "",
+            "## Patch Actions",
+            "",
+            "See `PATCH_ACTIONS.md`.",
+            "",
+            "## Verification Commands",
+            ""
+        ])
+        for f in open_findings:
+            if f.validation:
+                lines.append(f"### {f.id}")
+                for cmd in f.validation:
+                    lines.append(f"- `{cmd}`")
+                lines.append("")
+        return "\n".join(lines) + "\n"
+
+    def generate_validation_report(self) -> str:
+        """Assemble Validation Report deliverable."""
+        lines = [
+            f"# Validation Report: {self.repo_name}",
+            "",
+            "## Summary",
+            "",
+            "Validation results for findings with explicit verification commands.",
+            "",
+            "## Findings Validated",
+            "",
+            "| Finding ID | Status | Commands | Expected | Actual | Notes |",
+            "| :--- | :--- | :--- | :--- | :--- | :--- |"
+        ]
+        for f in self.registry.findings.values():
+            if f.validation:
+                cmds = "; ".join(f.validation)
+                lines.append(
+                    f"| {f.id} | PENDING | `{cmds}` | Fix verified | (run commands) | {f.confidence} |"
+                )
+        return "\n".join(lines) + "\n"
+
     def build_all_artifacts(self, output_dir: Path | str = "artifacts") -> dict[str, Path]:
-        """Compile and write all 9 canonical deliverables."""
+        """Compile and write all canonical deliverables."""
         out = Path(output_dir).resolve()
         out.mkdir(parents=True, exist_ok=True)
 
@@ -199,6 +340,10 @@ class ArtifactPipeline:
             "TESTING_GAPS.md": self.generate_testing_gaps(),
             "UNKNOWNS_VERIFICATION.md": self.generate_unknowns_verification(),
             "CONFIDENCE_DECLARATION.md": self.generate_confidence_declaration(),
+            "INCIDENT_MINI_REPORT.md": self.generate_incident_mini_report(),
+            "PATCH_ACTIONS.md": self.generate_patch_actions(),
+            "REMEDIATION_PLAN.md": self.generate_remediation_plan(),
+            "VALIDATION_REPORT.md": self.generate_validation_report(),
         }
 
         paths: dict[str, Path] = {}

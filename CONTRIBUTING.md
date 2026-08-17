@@ -15,13 +15,15 @@ When contributing to HQE, preserve the core engineering philosophy:
 
 ## 2. Repository Layout & Conventions
 - `SKILL.md`: Main entrypoint and high-level routing for AI agents. Keep concise; use progressive disclosure.
-- `schemas/`: Draft-07 JSON Schemas (`finding.schema.json`, `findings.schema.json`, `run-manifest.schema.json`, `handoff.schema.json`).
-- `runtime/`: Deterministic Python execution runtime (`session_manager.py`, `finding_registry.py`, `evidence_store.py`, `run_manifest.py`, `artifact_pipeline.py`).
+- `protocol/`: Canonical HQE Engineer Protocol v5.0.0 (`hqe-engineer.yaml`, schema, validators, checksums).
+- `schemas/`: Draft-07 JSON Schemas for all canonical artifacts.
+- `runtime/`: Deterministic Python execution runtime (`session_manager.py`, `finding_registry.py`, `evidence_store.py`, `run_manifest.py`, `artifact_pipeline.py`, `redaction_engine.py`).
 - `references/`: Topic-specific deep dives loaded conditionally by agents.
 - `references/language-guides/`: Language-specific idioms, static analysis tools, and bug patterns (9 languages).
+- `references/gates/`: Structured quality gate definitions translated from HQE-Workbench resources.
+- `references/methodologies/`: Structured reasoning methodology guides (CAGEERF, FOCUS, 5W1H, etc.).
 - `workflows/`: Step-by-step procedural playbooks for audit modes (`full-audit.md`, `pr-review.md`, etc.).
 - `templates/`: Markdown templates for canonical deliverables, findings, and handoffs.
-- `schemas/`: Draft-07 JSON Schemas (`finding.schema.json`, `run-manifest.schema.json`, `session-log.schema.json`, etc.).
 - `scripts/`: Local Python 3.10+ utilities with minimal external dependencies.
 - `tests/`: Automated pytest unit, semantic, contract, and acceptance test suites.
 
@@ -31,18 +33,18 @@ When contributing to HQE, preserve the core engineering philosophy:
 Before submitting a Pull Request, run the local verification suite:
 
 ```bash
-# 1. Compile all Python scripts, tests, and runtime modules
-python3 -m compileall -q scripts tests runtime
+# 1. Compile all Python scripts, tests, runtime, and protocol modules
+python3 -m compileall -q scripts tests runtime protocol
 
 # 2. Run the pytest test suite
-pytest -v
+python3 -m pytest -q
 
 # 3. Verify skill structural completeness & links
 python3 scripts/check_skill.py .
 
 # 4. Verify protocol sync & schema integrity
-python3 scripts/check_protocol_sync.py .
-python3 scripts/validate_protocol_bundle.py --strict-schema-metadata
+python3 scripts/check_protocol_sync.py
+python3 scripts/validate_protocol_bundle.py
 ```
 
 ---
