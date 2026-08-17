@@ -1,8 +1,15 @@
-# Handoff Generation
+# Handoff Generation Workflow
 
 When requested (`/HQE handoff` or as part of a full audit), generate an implementation-ready handoff for another agent.
 
-## Handoff Requirements
+---
+
+## 1. Objective
+Generate an unambiguous, structured, and implementation-ready handoff ledger enabling another AI agent or engineer to seamlessly execute verified remediations without context degradation.
+
+---
+
+## 2. Handoff Requirements
 The handoff must be structured and unambiguous. Avoid vague language like "improve error handling" or "clean up code". Specify where, why, and how success is proven.
 
 A handoff must include:

@@ -689,6 +689,13 @@ sbom.cdx.json
 !Cargo.lock
 
 
+# Ensure cache debris is never tracked
+**/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
 # =============================================================================
 # End Skill-HQE .gitignore
 # =============================================================================

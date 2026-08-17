@@ -24,11 +24,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Validate Protocol Bundle
+      - name: Validate Protocol Bundle & Sync
         run: |
           python protocol/validate.py protocol/hqe-engineer.yaml
           python protocol/validate.py --schema
           python scripts/validate_protocol_bundle.py --strict-schema-metadata
+          python scripts/check_protocol_sync.py .
 
       - name: Run Skill Completeness & Link Check
         run: |

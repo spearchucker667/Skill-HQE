@@ -1,6 +1,6 @@
 # Migration from HQE-Workbench to Skill-HQE (`/HQE`)
 
-This document outlines the architectural migration and capability translation from the monolithic desktop application [HQE-Workbench](https://github.com/hqe-project/hqe-workbench) (`/Users/super_user/Projects/HQE-Workbench`) into the native agentic skill **Skill-HQE** (`/Users/super_user/Projects/Skill-HQE`).
+This document outlines the architectural migration and capability translation from the monolithic desktop application `HQE-Workbench` into the native agentic skill **Skill-HQE** (`/HQE`).
 
 ---
 
@@ -8,20 +8,20 @@ This document outlines the architectural migration and capability translation fr
 
 | Dimension | HQE-Workbench | Skill-HQE (`/HQE`) |
 | :--- | :--- | :--- |
-| **Architecture** | Tauri / Rust desktop application + React frontend | Native AI Agent Skill (`SKILL.md` + modular references/workflows) |
-| **Execution Runtime** | Compiled native binary (`hqe` CLI / GUI) | Executed by agent host runtimes (Gemini CLI, Antigravity, Claude) |
-| **Protocol Authority** | `protocol/hqe-engineer.yaml` | `protocol/hqe-engineer.yaml` (embedded byte-for-byte active source) |
+| **Architecture** | Tauri / Rust desktop application + React frontend | Native AI Agent Skill (`SKILL.md` + modular references + runtime layer) |
+| **Execution Runtime** | Compiled native binary (`hqe` CLI / GUI) | Executed by agent host runtimes with Python deterministic runtime (`runtime/`) |
+| **Protocol Authority** | `protocol/hqe-engineer.yaml` | `protocol/hqe-engineer.yaml` (canonical active v5.0.0 protocol source) |
 | **Provider Orchestration** | `crates/hqe-openai/` custom client | Host AI agent's native reasoning & tool integration |
 | **Persistence / Storage** | SQLite + SQLCipher encrypted database | Stateless / session artifacts (`HQE_SESSION_LOG.json`, `HQE_RUN_MANIFEST.json`) |
 | **Secrets / Keyring** | System keychain integration | Ephemeral environment variables; strictly zero-leakage redaction |
-| **Tooling & Helpers** | Native Rust crates (`hqe-core`, `hqe-artifacts`) | Lightweight standalone Python utilities (`scripts/*.py`) |
+| **Tooling & Helpers** | Native Rust crates (`hqe-core`, `hqe-artifacts`) | Lightweight standalone Python utilities (`scripts/*.py`) and `runtime/` engine |
 
 ---
 
 ## 2. What Was Ported (Direct Lineage)
 
 1. **Active Protocol Control Plane (`protocol/hqe-engineer.yaml`)**:
-   - The active v4.2.1 protocol is embedded directly in `protocol/`.
+   - The active v5.0.0 protocol is embedded directly in `protocol/`.
    - Execution ordering (Phase -1 through Phase 4) is enforced in `SKILL.md`.
    - Health score rubric (1–10 bands), severity gates, taint chains, and change budgets are active.
 2. **Canonical Artifact Definitions**:
@@ -35,14 +35,16 @@ This document outlines the architectural migration and capability translation fr
 
 ---
 
-## 3. What Was Translated (Methodological Adaptation)
+## 3. What Was Adapted (Methodological & Runtime Adaptation)
 
-1. **MCP Prompts & Reasoning Frameworks**:
-   - Instead of running a background JSON-RPC MCP server (`mcp-server/`), the high-value prompt methodologies (5W1H, CAGEERF, FOCUS, REACT, SCAMPER) and quality gates were translated into `references/reasoning-methodologies.md` and `references/quality-gates.md`.
-2. **Debugging & Trace Workflows**:
+1. **Deterministic Execution & Runtime Layer**:
+   - Ported core execution state, session management, evidence collection, and artifact pipeline into pure-Python `runtime/` modules (`runtime/session_manager.py`, `runtime/artifact_pipeline.py`, `runtime/finding_registry.py`, `runtime/evidence_store.py`, `runtime/run_manifest.py`).
+2. **MCP Prompts & Reasoning Frameworks**:
+   - Instead of running a background JSON-RPC MCP server (`mcp-server/`), prompt methodologies (5W1H, CAGEERF, FOCUS, REACT, SCAMPER) and quality gates were translated into `references/reasoning-methodologies.md` and `references/quality-gates.md`.
+3. **Debugging & Trace Workflows**:
    - CLI debugging tools were adapted into actionable workflows: `workflows/debug-error.md` and `workflows/trace-regression.md`.
-3. **Artifact Generation**:
-   - The Rust generation engine (`crates/hqe-artifacts/`) was translated into Markdown templates (`templates/*.md`) and JSON schemas (`schemas/*.json`).
+4. **Artifact Assembly**:
+   - The Rust generation engine (`crates/hqe-artifacts/`) was translated into `runtime/artifact_pipeline.py`, Markdown templates (`templates/*.md`), and JSON schemas (`schemas/*.json`).
 
 ---
 

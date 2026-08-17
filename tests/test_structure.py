@@ -40,7 +40,18 @@ def test_all_canonical_scripts_exist():
         "inventory_repo.py", "detect_manifests.py", "detect_test_commands.py",
         "local_risk_scan.py", "redact_secrets.py", "summarize_tree.py",
         "validate_findings.py", "validate_manifest.py", "validate_session_log.py",
-        "validate_semantics.py", "validate_protocol_bundle.py", "package_skill.py", "check_skill.py"
+        "validate_semantics.py", "validate_protocol_bundle.py",
+        "build_artifacts.py", "create_run_manifest.py", "check_protocol_sync.py",
+        "package_skill.py", "check_skill.py"
     ):
         p = ROOT / "scripts" / f
         assert p.is_file(), f"Missing script: scripts/{f}"
+
+
+def test_runtime_layer_files_exist():
+    for f in (
+        "__init__.py", "session_manager.py", "finding_registry.py",
+        "evidence_store.py", "run_manifest.py", "artifact_pipeline.py"
+    ):
+        p = ROOT / "runtime" / f
+        assert p.is_file(), f"Missing runtime file: runtime/{f}"

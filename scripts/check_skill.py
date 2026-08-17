@@ -78,6 +78,10 @@ REQUIRED_FILES = [
     "workflows/debug-error.md",
     "workflows/trace-regression.md",
     "workflows/handoff-generation.md",
+    "workflows/runtime-initialization.md",
+    "workflows/artifact-generation.md",
+    "workflows/evidence-capture.md",
+    "workflows/final-quality-gate.md",
     # Templates
     "templates/finding.md",
     "templates/report.md",
@@ -106,6 +110,13 @@ REQUIRED_FILES = [
     "schemas/session-log.schema.json",
     "schemas/redaction-log.schema.json",
     "schemas/report.schema.json",
+    # Runtime
+    "runtime/__init__.py",
+    "runtime/session_manager.py",
+    "runtime/finding_registry.py",
+    "runtime/evidence_store.py",
+    "runtime/run_manifest.py",
+    "runtime/artifact_pipeline.py",
     # Scripts
     "scripts/inventory_repo.py",
     "scripts/detect_manifests.py",
@@ -118,6 +129,9 @@ REQUIRED_FILES = [
     "scripts/validate_session_log.py",
     "scripts/validate_semantics.py",
     "scripts/validate_protocol_bundle.py",
+    "scripts/build_artifacts.py",
+    "scripts/create_run_manifest.py",
+    "scripts/check_protocol_sync.py",
     "scripts/package_skill.py",
     "scripts/check_skill.py",
     # Docs

@@ -1,6 +1,6 @@
 # HQE Source Audit & Licensing Provenance (v5.0.0)
 
-This document records the exact source file lineage, checksums, modifications, and licensing boundaries for all components imported or adapted from [HQE-Workbench](/Users/super_user/Projects/HQE-Workbench) and the **HQE Protocol v5.0.0** package.
+This document records the exact source file lineage, checksums, modifications, and licensing boundaries for all components imported or adapted from `HQE-Workbench` and the **HQE Protocol v5.0.0** package.
 
 ---
 

@@ -236,6 +236,14 @@ Skill-HQE/
 │   ├── redaction-log.schema.json # Redaction log schema
 │   └── report.schema.json       # Structured audit report schema
 │
+├── 📂 runtime/                  # Deterministic Python execution runtime
+│   ├── __init__.py              # Runtime package export
+│   ├── session_manager.py       # Session state machine & persistence
+│   ├── finding_registry.py      # Finding repository & lifecycle state machine
+│   ├── evidence_store.py        # Code evidence triads & tool execution logger
+│   ├── run_manifest.py          # Deterministic run manifest generator
+│   └── artifact_pipeline.py     # Canonical 9-deliverable assembly engine
+│
 ├── 📂 scripts/                  # Portable Python CLI helper tools
 │   ├── check_skill.py           # Skill structure & link validator
 │   ├── detect_manifests.py      # Multi-ecosystem manifest detector (22+ ecosystems)
@@ -249,9 +257,16 @@ Skill-HQE/
 │   ├── validate_session_log.py  # Session log validator
 │   ├── validate_semantics.py    # Cross-field semantic validator
 │   ├── validate_protocol_bundle.py # Protocol bundle validator
+│   ├── build_artifacts.py       # Deterministic audit deliverable assembler
+│   ├── create_run_manifest.py   # Run manifest generator CLI
+│   ├── check_protocol_sync.py   # Protocol synchronization & checksum validator
 │   └── package_skill.py         # Release packager (zero cache/git debris)
 │
 └── 📂 tests/                    # Automated tests and acceptance fixtures
+    ├── test_runtime.py          # Runtime layer unit & state machine tests
+    ├── test_workflow_contracts.py # Workflow contract tests
+    ├── test_template_contracts.py # Template contract tests
+    ├── test_protocol_sync.py    # Protocol checksum synchronization tests
     ├── test_structure.py        # Repository structure tests
     ├── test_schemas.py          # JSON schema validation tests
     ├── test_semantics.py        # Semantic invariant tests

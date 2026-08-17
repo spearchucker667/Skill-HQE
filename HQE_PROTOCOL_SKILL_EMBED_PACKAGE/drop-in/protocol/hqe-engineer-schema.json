@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://hqe.dev/schemas/hqe-engineer-v4.0.0.json",
-  "title": "HQE Engineer Protocol v4.2.0 Schema",
-  "description": "JSON Schema for validating HQE Engineer protocol YAML files",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hqe-protocol.dev/schemas/v5.0.0/hqe-engineer-schema.json",
+  "title": "HQE Engineer Protocol Schema v5.0.0 (hqe-engineer-schema.json)",
+  "description": "Schema for HQE Engineer Protocol v5.0.0 validating evidence-driven audits, remediation workflows, security controls, quality gates, and reproducibility.",
   "type": "object",
   "required": [
     "schema_version",
@@ -31,7 +31,13 @@
     },
     "license": {
       "type": "string",
-      "enum": ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "Proprietary"]
+      "enum": [
+        "MIT",
+        "Apache-2.0",
+        "GPL-3.0",
+        "BSD-3-Clause",
+        "Proprietary"
+      ]
     },
     "maintainer": {
       "type": "string"
@@ -42,7 +48,11 @@
     },
     "meta": {
       "type": "object",
-      "required": ["name", "intent", "primary_outcomes"],
+      "required": [
+        "name",
+        "intent",
+        "primary_outcomes"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -67,13 +77,23 @@
     },
     "definitions": {
       "type": "object",
-      "required": ["severity_levels", "effort_tiers", "id_prefixes"],
+      "required": [
+        "severity_levels",
+        "effort_tiers",
+        "id_prefixes"
+      ],
       "properties": {
         "severity_levels": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+            "enum": [
+              "CRITICAL",
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "INFO"
+            ]
           },
           "minItems": 3,
           "maxItems": 5
@@ -82,12 +102,21 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION"]
+            "enum": [
+              "FACT",
+              "INFERENCE",
+              "HYPOTHESIS",
+              "NEEDS_VERIFICATION"
+            ]
           }
         },
         "effort_tiers": {
           "type": "object",
-          "required": ["S", "M", "L"],
+          "required": [
+            "S",
+            "M",
+            "L"
+          ],
           "properties": {
             "S": {
               "type": "string",
@@ -107,7 +136,11 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["Low", "Medium", "High"]
+            "enum": [
+              "Low",
+              "Medium",
+              "High"
+            ]
           }
         },
         "id_prefixes": {
@@ -140,7 +173,10 @@
     },
     "role": {
       "type": "object",
-      "required": ["title", "mandate"],
+      "required": [
+        "title",
+        "mandate"
+      ],
       "properties": {
         "title": {
           "type": "string"
@@ -174,7 +210,10 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["principle", "meaning"],
+        "required": [
+          "principle",
+          "meaning"
+        ],
         "properties": {
           "principle": {
             "type": "string"
@@ -204,7 +243,14 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["Security", "Correctness", "Reliability", "Performance", "Maintainability", "DX"]
+            "enum": [
+              "Security",
+              "Correctness",
+              "Reliability",
+              "Performance",
+              "Maintainability",
+              "DX"
+            ]
           }
         }
       }
@@ -213,7 +259,11 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "requirement"],
+        "required": [
+          "id",
+          "name",
+          "requirement"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -342,7 +392,12 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "title", "content", "required"],
+            "required": [
+              "id",
+              "title",
+              "content",
+              "required"
+            ],
             "properties": {
               "id": {
                 "type": "string"
@@ -396,7 +451,10 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["version", "date"],
+        "required": [
+          "version",
+          "date"
+        ],
         "properties": {
           "version": {
             "type": "string",
@@ -427,7 +485,10 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": ["integer", "number"]
+          "type": [
+            "integer",
+            "number"
+          ]
         },
         "name": {
           "type": "string"
@@ -439,7 +500,10 @@
           "type": "string"
         },
         "focus": {
-          "type": ["object", "array"]
+          "type": [
+            "object",
+            "array"
+          ]
         },
         "sections": {
           "type": "array"
@@ -457,5 +521,6 @@
         }
       }
     }
-  }
+  },
+  "x_hqe_schema_version": "5.0.0"
 }
