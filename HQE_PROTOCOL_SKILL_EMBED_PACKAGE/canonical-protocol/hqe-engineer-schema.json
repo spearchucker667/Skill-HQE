@@ -1,0 +1,461 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hqe.dev/schemas/hqe-engineer-v4.0.0.json",
+  "title": "HQE Engineer Protocol v4.2.0 Schema",
+  "description": "JSON Schema for validating HQE Engineer protocol YAML files",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "meta",
+    "definitions",
+    "role",
+    "phases",
+    "constraints"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Schema version in semver format"
+    },
+    "protocol_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Protocol version in semver format"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Last update date (YYYY-MM-DD)"
+    },
+    "license": {
+      "type": "string",
+      "enum": ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "Proprietary"]
+    },
+    "maintainer": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "string",
+      "format": "email"
+    },
+    "meta": {
+      "type": "object",
+      "required": ["name", "intent", "primary_outcomes"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "intent": {
+          "type": "string"
+        },
+        "primary_outcomes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "execution_order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "definitions": {
+      "type": "object",
+      "required": ["severity_levels", "effort_tiers", "id_prefixes"],
+      "properties": {
+        "severity_levels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+          },
+          "minItems": 3,
+          "maxItems": 5
+        },
+        "confidence_tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION"]
+          }
+        },
+        "effort_tiers": {
+          "type": "object",
+          "required": ["S", "M", "L"],
+          "properties": {
+            "S": {
+              "type": "string",
+              "description": "Small effort description"
+            },
+            "M": {
+              "type": "string",
+              "description": "Medium effort description"
+            },
+            "L": {
+              "type": "string",
+              "description": "Large effort description"
+            }
+          }
+        },
+        "risk_levels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Low", "Medium", "High"]
+          }
+        },
+        "id_prefixes": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z]{3,6}$": {
+              "type": "string",
+              "description": "Description of what this prefix represents"
+            }
+          },
+          "minProperties": 3
+        },
+        "health_score_rubric": {
+          "type": "object",
+          "patternProperties": {
+            "^\\d+-\\d+$|\\d+-\\d+$": {
+              "type": "object",
+              "properties": {
+                "meaning": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "required": ["title", "mandate"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "acting_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mandate": {
+          "type": "string"
+        },
+        "personas": {
+          "type": "object",
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "security": {
+              "type": "string"
+            },
+            "performance": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "operating_principles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["principle", "meaning"],
+        "properties": {
+          "principle": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "in_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "out_of_scope_default": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "priority_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Security", "Correctness", "Reliability", "Performance", "Maintainability", "DX"]
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "requirement"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^C\\d+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "requirement": {
+            "type": "string"
+          },
+          "enforcement": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "anti_patterns": {
+      "type": "object",
+      "properties": {
+        "prohibited": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "new_dependency_bias": {
+          "type": "string"
+        },
+        "style_only_filter": {
+          "type": "string"
+        }
+      }
+    },
+    "output_controls": {
+      "type": "object",
+      "properties": {
+        "size_limits": {
+          "type": "object",
+          "properties": {
+            "critical_and_high_max_total": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100
+            },
+            "medium_max": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100
+            },
+            "low_max_one_liners": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100
+            }
+          }
+        },
+        "deduplication": {
+          "type": "object",
+          "properties": {
+            "mandatory": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "properties": {
+        "phase_minus_one": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_zero": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_zero_five": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_one": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_two": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_three": {
+          "$ref": "#/definitions/phaseDefinition"
+        },
+        "phase_four": {
+          "$ref": "#/definitions/phaseDefinition"
+        }
+      }
+    },
+    "prioritization": {
+      "type": "object",
+      "properties": {
+        "ordering_principle": {
+          "type": "string"
+        },
+        "severity_definitions": {
+          "type": "object",
+          "properties": {
+            "CRITICAL": {
+              "$ref": "#/definitions/severityDefinition"
+            },
+            "HIGH": {
+              "$ref": "#/definitions/severityDefinition"
+            },
+            "MEDIUM": {
+              "$ref": "#/definitions/severityDefinition"
+            },
+            "LOW": {
+              "$ref": "#/definitions/severityDefinition"
+            }
+          }
+        }
+      }
+    },
+    "output_structure": {
+      "type": "object",
+      "properties": {
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "content", "required"],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "condition": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "patch_packaging": {
+      "type": "object",
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "pre_delivery_checklist": {
+      "type": "object",
+      "properties": {
+        "mandatory_checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prohibited_output": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "changelog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["version", "date"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sources_merged": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "phaseDefinition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": ["integer", "number"]
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "focus": {
+          "type": ["object", "array"]
+        },
+        "sections": {
+          "type": "array"
+        }
+      }
+    },
+    "severityDefinition": {
+      "type": "object",
+      "properties": {
+        "meaning": {
+          "type": "string"
+        },
+        "response": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

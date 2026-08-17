@@ -1,0 +1,5 @@
+# Skill-HQE Development & Testing Dependencies
+pytest>=8.0.0
+jsonschema>=4.20.0
+referencing>=0.30.0
+PyYAML>=6.0.0

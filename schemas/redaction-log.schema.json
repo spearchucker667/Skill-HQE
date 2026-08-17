@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Redaction Log Schema",
+  "type": "object",
+  "properties": {
+    "run_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "total_redactions": { "type": "integer", "minimum": 0 },
+    "by_type": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "files_scanned": { "type": "integer", "minimum": 0 },
+    "redactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "secret_type": { "type": "string" },
+          "replacement": { "type": "string" }
+        },
+        "required": ["file", "secret_type", "replacement"]
+      }
+    }
+  },
+  "required": ["run_id", "timestamp", "total_redactions", "by_type"]
+}

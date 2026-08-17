@@ -5,26 +5,56 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^HQE-[A-Z]+-[0-9]+$"
+      "pattern": "^HQE-(BOOT|SEC|BUG|REL|PERF|UX|DX|DOC|DEBT|DEPS)-[0-9]{3,}$"
     },
     "title": {
       "type": "string"
     },
     "category": {
       "type": "string",
-      "enum": ["BOOT", "SEC", "BUG", "REL", "PERF", "UX", "DX", "DOC", "DEBT", "DEPS"]
+      "enum": [
+        "BOOT",
+        "SEC",
+        "BUG",
+        "REL",
+        "PERF",
+        "UX",
+        "DX",
+        "DOC",
+        "DEBT",
+        "DEPS"
+      ]
     },
     "severity": {
       "type": "string",
-      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ]
     },
     "confidence": {
       "type": "string",
-      "enum": ["FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION"]
+      "enum": [
+        "FACT",
+        "INFERENCE",
+        "HYPOTHESIS",
+        "NEEDS_VERIFICATION"
+      ]
     },
     "status": {
       "type": "string",
-      "enum": ["CONFIRMED", "STRONGLY_SUPPORTED", "INFERRED", "SUSPECTED", "NOT_REPRODUCED", "FIXED"]
+      "enum": [
+        "CONFIRMED",
+        "STRONGLY_SUPPORTED",
+        "SUSPECTED",
+        "NOT_REPRODUCED",
+        "FIXED",
+        "REOPENED",
+        "SUPERSEDED"
+      ]
     },
     "affected_component": {
       "type": "string"
@@ -43,6 +73,12 @@
           "end_line": {
             "type": "integer"
           },
+          "anchor": {
+            "type": "string"
+          },
+          "grep_signature": {
+            "type": "string"
+          },
           "symbol": {
             "type": "string"
           },
@@ -50,7 +86,24 @@
             "type": "string"
           }
         },
-        "required": ["path"]
+        "anyOf": [
+          {
+            "required": [
+              "path",
+              "start_line",
+              "end_line",
+              "snippet"
+            ]
+          },
+          {
+            "required": [
+              "path",
+              "anchor",
+              "grep_signature",
+              "snippet"
+            ]
+          }
+        ]
       },
       "minItems": 1
     },
@@ -67,7 +120,7 @@
       "type": "string"
     },
     "reproduction": {
-      "type": "string"
+      "type": ["string", "null"]
     },
     "remediation": {
       "type": "string"
@@ -80,17 +133,76 @@
     },
     "effort": {
       "type": "string",
-      "enum": ["S", "M", "L"]
+      "enum": [
+        "S",
+        "M",
+        "L"
+      ]
     },
     "regression_risk": {
       "type": "string",
-      "enum": ["Low", "Medium", "High"]
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ]
     },
     "related_findings": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exploitability": {
+      "type": "string"
+    },
+    "blast_radius": {
+      "type": "string"
+    },
+    "likelihood": {
+      "type": "string"
+    },
+    "likelihood_justification": {
+      "type": "string"
+    },
+    "exposure_evidence": {
+      "type": "string"
+    },
+    "taint_chain": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validation_boundary": {
+          "type": "string"
+        },
+        "sink": {
+          "type": "string"
+        },
+        "impact": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "transforms",
+        "validation_boundary",
+        "sink",
+        "impact"
+      ]
     }
   },
   "required": [
@@ -101,6 +213,36 @@
     "confidence",
     "status",
     "evidence",
-    "effort"
+    "effort",
+    "affected_component",
+    "root_cause",
+    "impact",
+    "remediation",
+    "validation",
+    "regression_risk"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "severity": {
+            "enum": [
+              "CRITICAL",
+              "HIGH"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "preconditions",
+          "exploitability",
+          "blast_radius",
+          "likelihood",
+          "likelihood_justification",
+          "exposure_evidence"
+        ]
+      }
+    }
   ]
 }

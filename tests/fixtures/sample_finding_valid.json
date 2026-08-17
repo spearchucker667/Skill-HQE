@@ -1,0 +1,50 @@
+[
+  {
+    "id": "HQE-SEC-001",
+    "title": "Hardcoded JWT Secret Fallback in Authentication Handler",
+    "category": "SEC",
+    "severity": "HIGH",
+    "confidence": "FACT",
+    "status": "CONFIRMED",
+    "affected_component": "crates/hqe-core/src/auth.rs",
+    "evidence": [
+      {
+        "path": "crates/hqe-core/src/auth.rs",
+        "start_line": 52,
+        "end_line": 56,
+        "symbol": "get_signing_key",
+        "snippet": "let secret = std::env::var(\"JWT_SECRET\").unwrap_or_else(|_| \"dev-insecure-secret-key-12345\".to_string());\nDecodingKey::from_secret(secret.as_bytes())"
+      }
+    ],
+    "observed_behavior": "When the JWT_SECRET environment variable is unset, the service falls back to a predictable static string.",
+    "expected_behavior": "The service must fail fast with a fatal startup error if JWT_SECRET is unset in production environments.",
+    "root_cause": "Permissive default fallback in auth initialization.",
+    "impact": "Attackers can forge arbitrary authentication tokens when JWT_SECRET is missing.",
+    "reproduction": "Unset JWT_SECRET and issue a signed token using the hardcoded secret; the server accepts it.",
+    "remediation": "Replace unwrap_or_else with explicit error propagation and fail fast on boot.",
+    "preconditions": [
+      "The server must be booted without JWT_SECRET in environment."
+    ],
+    "exploitability": "High",
+    "blast_radius": "Complete system compromise",
+    "likelihood": "High",
+    "likelihood_justification": "Common to miss environment variables in staging/production deployments.",
+    "exposure_evidence": "auth.rs#L52 entrypoint exposed to public HTTP request pipeline.",
+    "taint_chain": {
+      "source": "Environment variable JWT_SECRET",
+      "transforms": [
+        "Fallback unwrap_or_else to hardcoded static string",
+        "Secret byte array conversion"
+      ],
+      "validation_boundary": "JWT signature verification routine",
+      "sink": "DecodingKey::from_secret in token validation handler",
+      "impact": "Arbitrary auth token forgery and authentication bypass"
+    },
+    "validation": [
+      "cargo test --package hqe-core test_auth_missing_secret_fails"
+    ],
+    "effort": "S",
+    "regression_risk": "Low",
+    "related_findings": []
+  }
+]

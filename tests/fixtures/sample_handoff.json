@@ -1,0 +1,68 @@
+{
+  "mission": "Fix hardcoded JWT secret fallback in auth initialization",
+  "repository_path": "/Users/super_user/Projects/example-app",
+  "current_state": "All tests pass; auth module contains an insecure fallback when JWT_SECRET is unset.",
+  "do_not_assume": [
+    "Do not assume production config files contain valid defaults"
+  ],
+  "finding_inventory": [
+    {
+      "id": "HQE-SEC-001",
+      "title": "Hardcoded JWT Secret Fallback in Authentication Handler",
+      "category": "SEC",
+      "severity": "HIGH",
+      "confidence": "FACT",
+      "status": "CONFIRMED",
+      "affected_component": "crates/hqe-core/src/auth.rs",
+      "evidence": [
+        {
+          "path": "crates/hqe-core/src/auth.rs",
+          "start_line": 52,
+          "end_line": 56,
+          "symbol": "get_signing_key",
+          "snippet": "let secret = std::env::var(\"JWT_SECRET\").unwrap_or_else(|_| \"dev-insecure-secret-key-12345\".to_string());"
+        }
+      ],
+      "observed_behavior": "Fallback to dev string",
+      "expected_behavior": "Fail fast",
+      "root_cause": "Permissive default",
+      "impact": "Token forgery",
+      "reproduction": "Unset env var",
+      "remediation": "Propagate error",
+      "preconditions": ["No env var set"],
+      "exploitability": "High",
+      "blast_radius": "System takeover",
+      "likelihood": "High",
+      "likelihood_justification": "Missing env var common",
+      "exposure_evidence": "Found in auth.rs",
+      "validation": [
+        "cargo test"
+      ],
+      "effort": "S",
+      "regression_risk": "Low",
+      "related_findings": []
+    }
+  ],
+  "priority_order": [
+    "HQE-SEC-001"
+  ],
+  "required_changes": [
+    "Modify crates/hqe-core/src/auth.rs to return Result<DecodingKey, AuthError>"
+  ],
+  "tests_to_update": [
+    "crates/hqe-core/tests/auth_tests.rs"
+  ],
+  "validation_commands": [
+    "cargo test --package hqe-core"
+  ],
+  "regression_risks": [
+    "Integration tests expecting default secret in CI must now set JWT_SECRET env var"
+  ],
+  "completion_criteria": [
+    "All unit and integration tests in hqe-core pass",
+    "Missing JWT_SECRET returns explicit AuthError::MissingSecret"
+  ],
+  "do_not_rules": [
+    "Do not modify unrelated crypto or user endpoints"
+  ]
+}

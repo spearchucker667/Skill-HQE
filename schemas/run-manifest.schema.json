@@ -10,8 +10,36 @@
       "type": "string",
       "format": "date-time"
     },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" }
+      }
+    },
     "repository_path": {
       "type": "string"
+    },
+    "repository_details": {
+      "type": "object"
+    },
+    "protocol_details": {
+      "type": "object"
+    },
+    "environment": {
+      "type": "object"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limits": {
+      "type": "object"
+    },
+    "redaction": {
+      "type": "object"
     },
     "mode": {
       "type": "string"
@@ -24,27 +52,74 @@
       "items": {
         "type": "object",
         "properties": {
-          "subsystem": { "type": "string" },
-          "files": { "type": "integer" },
-          "reviewed": { "type": "boolean" },
-          "depth": { "type": "string" },
-          "findings_count": { "type": "integer" }
+          "subsystem": {
+            "type": "string"
+          },
+          "files": {
+            "type": "integer"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "depth": {
+            "type": "string"
+          },
+          "findings_count": {
+            "type": "integer"
+          }
         }
       }
     },
     "unreviewed_surfaces": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "summary": {
       "type": "object",
       "properties": {
-        "total_files_scanned": { "type": "integer" },
-        "total_findings": { "type": "integer" },
-        "critical_findings": { "type": "integer" },
-        "high_findings": { "type": "integer" }
+        "total_files_scanned": {
+          "type": "integer"
+        },
+        "total_findings": {
+          "type": "integer"
+        },
+        "critical_findings": {
+          "type": "integer"
+        },
+        "high_findings": {
+          "type": "integer"
+        }
+      }
+    },
+    "health_score": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "band": {
+          "type": "string"
+        },
+        "omitted": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   },
-  "required": ["timestamp", "repository_path", "mode", "summary"]
+  "required": [
+    "timestamp",
+    "repository_path",
+    "mode",
+    "summary"
+  ]
 }

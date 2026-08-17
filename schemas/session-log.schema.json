@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Session Log Schema",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository_path": {
+      "type": "string"
+    },
+    "completed": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tasks or phases fully completed during this session"
+    },
+    "in_progress": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tasks currently underway"
+    },
+    "discovered": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^HQE-(BOOT|SEC|BUG|REL|PERF|UX|DX|DOC|DEBT|DEPS)-[0-9]{3,}$"
+      },
+      "description": "Finding IDs newly discovered or identified in this session"
+    },
+    "reprioritized": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Finding IDs or tasks whose priority was modified"
+    },
+    "next_session": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Recommended immediate priorities for the next agent session"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARN", "ERROR"] },
+          "message": { "type": "string" }
+        },
+        "required": ["timestamp", "level", "message"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "session_id",
+    "completed",
+    "in_progress",
+    "discovered",
+    "next_session"
+  ]
+}

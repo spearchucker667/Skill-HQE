@@ -1,0 +1,30 @@
+name: Validate Skill Structure & Markdown Links
+
+on:
+  push:
+    paths:
+      - 'SKILL.md'
+      - 'docs/**'
+      - 'references/**'
+      - 'workflows/**'
+      - 'schemas/**'
+      - 'templates/**'
+      - 'scripts/**'
+  pull_request:
+
+jobs:
+  structure-check:
+    name: Verify Skill Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Structural Verification
+        run: |
+          python scripts/check_skill.py .

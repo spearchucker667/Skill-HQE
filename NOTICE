@@ -1,0 +1,30 @@
+Skill-HQE (High Quality Engineering Skill)
+Copyright 2026 The HQE Authors
+
+This product includes software developed by the HQE Project
+and adapted from HQE-Workbench.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+===============================================================================
+Source Lineage & Protocol Notices:
+===============================================================================
+The canonical HQE Engineer Protocol (protocol/hqe-engineer.yaml) and its associated
+JSON Schema (protocol/hqe-engineer-schema.json) are derived from the HQE Protocol
+specifications.
+
+Third-Party Components and Derived Heuristics:
+- Redaction patterns adapted from crates/hqe-core/src/redaction.rs
+- Static risk heuristics adapted from crates/hqe-core/src/repo.rs
+- Reasoning frameworks (5W1H, CAGEERF, FOCUS, REACT, SCAMPER) translated from
+  HQE MCP prompt resource libraries.

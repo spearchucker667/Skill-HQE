@@ -43,5 +43,18 @@
       "items": { "type": "string" }
     }
   },
-  "required": ["mission", "repository_path", "finding_inventory", "required_changes", "validation_commands", "completion_criteria"]
+  "required": [
+    "mission", 
+    "repository_path", 
+    "finding_inventory", 
+    "required_changes", 
+    "validation_commands", 
+    "completion_criteria",
+    "current_state",
+    "do_not_assume",
+    "priority_order",
+    "tests_to_update",
+    "regression_risks",
+    "do_not_rules"
+  ]
 }

@@ -1,0 +1,46 @@
+name: HQE Skill CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Validate Skill Integrity, Protocol & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Validate Protocol Bundle
+        run: |
+          python protocol/validate.py protocol/hqe-engineer.yaml
+          python protocol/validate.py --schema
+          python scripts/validate_protocol_bundle.py --strict-schema-metadata
+
+      - name: Run Skill Completeness & Link Check
+        run: |
+          python scripts/check_skill.py .
+
+      - name: Run Pytest Test Suite
+        run: |
+          pytest -v
+
+      - name: Validate Findings Schemas & Semantics
+        run: |
+          python scripts/validate_findings.py tests/fixtures/sample_finding_valid.json
+          python scripts/validate_semantics.py tests/fixtures/sample_finding_valid.json
+          python scripts/validate_manifest.py tests/fixtures/sample_manifest.json
+          python scripts/validate_session_log.py tests/fixtures/sample_session_log.json

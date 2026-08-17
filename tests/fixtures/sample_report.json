@@ -1,0 +1,70 @@
+{
+  "run_id": "hqe-run-20260817-001",
+  "protocol_version": "4.2.1",
+  "timestamp": "2026-08-17T08:00:00Z",
+  "repository": {
+    "name": "sample-service",
+    "path": "/path/to/sample-service",
+    "commit": "a1b2c3d4",
+    "branch": "main"
+  },
+  "health_score": {
+    "score": 8,
+    "band": "Solid",
+    "reasons": [
+      "Zero open CRITICAL vulnerabilities in production code paths",
+      "Robust CI pipelines with automated test and lint checks",
+      "Well-structured modular architecture with clear service boundaries"
+    ]
+  },
+  "executive_summary": {
+    "top_priorities": [
+      "HQE-SEC-001: Hardcoded JWT Secret Fallback in Authentication Handler"
+    ],
+    "critical_count": 0,
+    "high_count": 1,
+    "medium_count": 2,
+    "low_count": 4,
+    "blockers": []
+  },
+  "findings": [
+    {
+      "id": "HQE-SEC-001",
+      "title": "Hardcoded JWT Secret Fallback in Authentication Handler",
+      "category": "SEC",
+      "severity": "HIGH",
+      "confidence": "FACT",
+      "status": "CONFIRMED",
+      "affected_component": "crates/hqe-core/src/auth.rs",
+      "preconditions": ["Missing JWT_SECRET in environment"],
+      "exploitability": "High",
+      "blast_radius": "Full auth bypass",
+      "likelihood": "High",
+      "likelihood_justification": "Default env values",
+      "exposure_evidence": "auth.rs#L52",
+      "taint_chain": {
+        "source": "JWT_SECRET env",
+        "transforms": ["unwrap_or_else"],
+        "validation_boundary": "JWT verify",
+        "sink": "DecodingKey::from_secret",
+        "impact": "Auth forgery"
+      },
+      "evidence": [
+        {
+          "path": "crates/hqe-core/src/auth.rs",
+          "start_line": 52,
+          "end_line": 56,
+          "snippet": "let secret = std::env::var(\"JWT_SECRET\").unwrap_or_else(|_| \"dev-insecure\".to_string());"
+        }
+      ],
+      "observed_behavior": "Fallback to dev secret",
+      "expected_behavior": "Fail fast",
+      "root_cause": "Permissive fallback",
+      "impact": "Auth forgery",
+      "remediation": "Fail fast",
+      "validation": ["cargo test"],
+      "effort": "S",
+      "regression_risk": "Low"
+    }
+  ]
+}

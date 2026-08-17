@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Structured Audit Report Schema",
+  "type": "object",
+  "properties": {
+    "run_id": { "type": "string" },
+    "protocol_version": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "commit": { "type": "string" },
+        "branch": { "type": "string" }
+      },
+      "required": ["name", "path"]
+    },
+    "health_score": {
+      "type": "object",
+      "properties": {
+        "score": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "band": { "type": "string", "enum": ["Production-ready", "Solid", "Fragile", "Unstable", "Broken"] },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "required": ["score", "band", "reasons"]
+    },
+    "executive_summary": {
+      "type": "object",
+      "properties": {
+        "top_priorities": { "type": "array", "items": { "type": "string" } },
+        "critical_count": { "type": "integer", "minimum": 0 },
+        "high_count": { "type": "integer", "minimum": 0 },
+        "medium_count": { "type": "integer", "minimum": 0 },
+        "low_count": { "type": "integer", "minimum": 0 },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["top_priorities", "critical_count", "high_count", "medium_count", "low_count"]
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "finding.schema.json" }
+    }
+  },
+  "required": [
+    "run_id",
+    "protocol_version",
+    "timestamp",
+    "repository",
+    "health_score",
+    "executive_summary",
+    "findings"
+  ]
+}

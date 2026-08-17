@@ -1,0 +1,24 @@
+name: Security & Secret Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  security-audit:
+    name: Security & Prompt Defense Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for Unredacted Secrets
+        run: |
+          # Basic scan to ensure no raw API keys or private keys are accidentally committed
+          ! grep -rnE --exclude="*.schema.json" --exclude="test_*.py" "(sk-[a-zA-Z0-9]{32,}|BEGIN PRIVATE KEY)" .

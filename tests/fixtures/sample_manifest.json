@@ -1,0 +1,26 @@
+{
+  "run_id": "HQE-RUN-20260817-001",
+  "timestamp": "2026-08-17T07:00:00Z",
+  "repository_path": "/Users/super_user/Projects/example-app",
+  "mode": "audit",
+  "options": {
+    "exhaustive": true,
+    "security_priority": true
+  },
+  "coverage": [
+    {
+      "subsystem": "crates/hqe-core",
+      "files": 12,
+      "reviewed": true,
+      "depth": "exhaustive",
+      "findings_count": 1
+    }
+  ],
+  "unreviewed_surfaces": [],
+  "summary": {
+    "total_files_scanned": 12,
+    "total_findings": 1,
+    "critical_findings": 0,
+    "high_findings": 1
+  }
+}

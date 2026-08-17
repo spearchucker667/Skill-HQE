@@ -1,0 +1,694 @@
+# =============================================================================
+# Skill-HQE — .gitignore
+# =============================================================================
+# Purpose:
+#   Keep the /HQE skill repository free of local state, caches, generated audit
+#   artifacts, secrets, packaging debris, editor files, and transient build
+#   output.
+#
+# Important:
+#   - Lockfiles are intentionally NOT ignored.
+#   - .github/ is intentionally NOT ignored.
+#   - Test fixtures may intentionally contain fake secrets, .env files, ignored
+#     files, or otherwise suspicious content; explicit exceptions are provided
+#     near the end of this file.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# macOS / Finder
+# -----------------------------------------------------------------------------
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.DocumentRevisions-V100
+.TemporaryItems
+.VolumeIcon.icns
+
+# macOS archive/extraction metadata
+__MACOSX/
+
+
+# -----------------------------------------------------------------------------
+# Windows
+# -----------------------------------------------------------------------------
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+
+# -----------------------------------------------------------------------------
+# Linux / desktop environment noise
+# -----------------------------------------------------------------------------
+
+.directory
+.Trash-*
+.nfs*
+
+
+# -----------------------------------------------------------------------------
+# Python bytecode / caches
+# -----------------------------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.pyre/
+.pytype/
+.hypothesis/
+.tox/
+.nox/
+.dmypy.json
+dmypy.json
+
+# Coverage
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/
+.pytest_cache/
+*.cover
+*.py,cover
+
+# Python profiling / benchmarking
+.prof/
+*.prof
+*.lprof
+.benchmarks/
+
+# Python package/build output
+build/
+dist/
+sdist/
+wheels/
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# pip / uv / poetry / pdm local state
+pip-log.txt
+pip-delete-this-directory.txt
+.uv/
+.pdm-python
+.pdm-build/
+.poetry-cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# -----------------------------------------------------------------------------
+# Node.js / JavaScript / TypeScript
+# -----------------------------------------------------------------------------
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+# Package manager caches
+.npm/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnpm-store/
+
+# Framework/build caches
+.next/
+.nuxt/
+.svelte-kit/
+.parcel-cache/
+.turbo/
+.vite/
+.eslintcache
+.stylelintcache
+.nyc_output/
+
+# Generated web build output
+out/
+coverage/
+
+
+# -----------------------------------------------------------------------------
+# Rust / Cargo
+# -----------------------------------------------------------------------------
+
+target/
+
+# rustfmt backup files
+**/*.rs.bk
+
+
+# -----------------------------------------------------------------------------
+# Go
+# -----------------------------------------------------------------------------
+
+# Local Go workspace files are machine-specific unless deliberately committed.
+go.work
+go.work.sum
+
+# Generic Go test/build output
+*.test
+*.out
+
+
+# -----------------------------------------------------------------------------
+# Java / Kotlin / Gradle / Maven
+# -----------------------------------------------------------------------------
+
+.gradle/
+.gradle-cache/
+**/build/
+**/out/
+*.class
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+
+# -----------------------------------------------------------------------------
+# .NET / C#
+# -----------------------------------------------------------------------------
+
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+
+
+# -----------------------------------------------------------------------------
+# Swift / Xcode
+# -----------------------------------------------------------------------------
+
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+
+
+# -----------------------------------------------------------------------------
+# Dart / Flutter
+# -----------------------------------------------------------------------------
+
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+
+# -----------------------------------------------------------------------------
+# Ruby
+# -----------------------------------------------------------------------------
+
+.bundle/
+vendor/bundle/
+.ruby-version
+.ruby-gemset
+
+
+# -----------------------------------------------------------------------------
+# PHP / Composer
+# -----------------------------------------------------------------------------
+
+vendor/
+.phpunit.result.cache
+
+
+# -----------------------------------------------------------------------------
+# C / C++ / CMake / Meson
+# -----------------------------------------------------------------------------
+
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile.user
+meson-private/
+meson-logs/
+meson-info/
+.mesonpy-*
+
+
+# -----------------------------------------------------------------------------
+# Terraform / infrastructure tooling
+# -----------------------------------------------------------------------------
+
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# Terraform local override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Pulumi local state / credentials
+.pulumi/
+
+
+# -----------------------------------------------------------------------------
+# Docker / container tooling
+# -----------------------------------------------------------------------------
+
+.docker/
+docker-compose.override.yml
+
+# Local container volumes / bind-mounted state
+.docker-data/
+docker-data/
+volumes/
+
+
+# -----------------------------------------------------------------------------
+# IDEs / editors
+# -----------------------------------------------------------------------------
+
+# VS Code / Cursor
+.vscode/
+.cursor/
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+
+# Vim / Neovim
+*.swp
+*.swo
+*.swn
+*.un~
+Session.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.\#*
+.dir-locals.el
+
+# Zed
+.zed/
+
+# Fleet
+.fleet/
+
+
+# -----------------------------------------------------------------------------
+# Shell / terminal local state
+# -----------------------------------------------------------------------------
+
+*.history
+.zsh_history
+.bash_history
+.fish_history
+
+
+# -----------------------------------------------------------------------------
+# Logs / traces / diagnostics
+# -----------------------------------------------------------------------------
+
+*.log
+logs/
+log/
+*.trace
+*.stacktrace
+*.dump
+*.dmp
+*.core
+
+# Runtime PID / socket files
+*.pid
+*.pid.lock
+*.sock
+*.socket
+
+
+# -----------------------------------------------------------------------------
+# Temporary / backup / swap files
+# -----------------------------------------------------------------------------
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.save
+*.cache
+*.lock.tmp
+
+tmp/
+temp/
+.cache/
+
+
+# -----------------------------------------------------------------------------
+# Local databases / state stores
+# -----------------------------------------------------------------------------
+
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.rdb
+
+# Local vector / index stores
+.chroma/
+chroma/
+.lancedb/
+qdrant_storage/
+vector_store/
+vector-store/
+
+
+# -----------------------------------------------------------------------------
+# Secrets / credentials / local configuration
+# -----------------------------------------------------------------------------
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Generic secret/config variants
+*.secret
+*.secrets
+*.credentials
+credentials.json
+credentials.yaml
+credentials.yml
+secrets.json
+secrets.yaml
+secrets.yml
+
+# API keys / tokens
+*.key
+*.token
+*.tokens
+
+# Private keys / certificates
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+
+# SSH / GPG material if copied into repo
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.asc~
+*.gpg~
+*.kdbx
+
+# Cloud provider credentials
+.aws/
+.gcp/
+.azure/
+
+# GitHub / package publishing credentials
+.npmrc
+.pypirc
+.netrc
+
+
+# -----------------------------------------------------------------------------
+# HQE local runtime / audit output
+# -----------------------------------------------------------------------------
+
+# Local HQE working state
+.hqe/
+.hqe-cache/
+.hqe-state/
+.hqe-work/
+.hqe-tmp/
+.hqe-runtime/
+.hqe-sessions/
+
+# Generated HQE reports/artifacts.
+# Source templates under templates/ are NOT affected.
+HQE_REPORT.md
+HQE_FINDINGS.json
+HQE_RUN_MANIFEST.json
+HQE_RISK_REGISTER.md
+HQE_MASTER_TODO.md
+HQE_PATTERN_FINDINGS.md
+HQE_QUICK_WINS.md
+HQE_SECURITY_POSTURE.md
+HQE_RELIABILITY.md
+HQE_TESTING_GAPS.md
+HQE_UNKNOWNS.md
+HQE_CONFIDENCE.md
+HQE_SESSION_LOG.json
+HQE_REDACTION_LOG.json
+HQE_REMEDIATION_PLAN.md
+HQE_VALIDATION.md
+HQE_HANDOFF.md
+
+# Generated artifact/output directories
+artifacts/
+audit-output/
+audit-results/
+hqe-output/
+hqe-results/
+reports/generated/
+generated/
+
+
+# -----------------------------------------------------------------------------
+# Generated schemas / validation output
+# -----------------------------------------------------------------------------
+
+schema-validation/
+validation-output/
+test-output/
+test-results/
+.junit/
+junit.xml
+
+
+# -----------------------------------------------------------------------------
+# Archives / release packages
+# -----------------------------------------------------------------------------
+
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tbz2
+*.tar.xz
+*.txz
+*.7z
+*.rar
+*.gz
+
+# Local release staging
+release/
+releases/
+package/
+packages/
+staging/
+stage/
+
+
+# -----------------------------------------------------------------------------
+# OS / package-manager install artifacts
+# -----------------------------------------------------------------------------
+
+*.dmg
+*.pkg
+*.msi
+*.exe
+*.app
+*.deb
+*.rpm
+*.apk
+*.aab
+*.ipa
+
+
+# -----------------------------------------------------------------------------
+# Local analysis / scanner state
+# -----------------------------------------------------------------------------
+
+# Static-analysis caches/results
+.semgrep/
+.semgrep-cache/
+.sarif/
+*.sarif
+*.sarif.json
+
+# Security scanner caches
+.trivy/
+.grype/
+.syft/
+.snyk/
+
+# Dependency audit output
+audit.json
+audit-report.json
+dependency-report.json
+sbom.json
+sbom.spdx.json
+sbom.cdx.json
+
+
+# -----------------------------------------------------------------------------
+# AI / agent local state
+# -----------------------------------------------------------------------------
+
+# Common agent/tool scratch state; source-controlled instruction files remain
+# explicitly allowed below where relevant.
+.claude/
+.codex/
+.gemini/
+.kimi/
+.opencode/
+.continue/
+.aider*
+.agent-cache/
+.agent-state/
+.agent-tmp/
+
+# Do NOT ignore repository-level agent instructions/configuration by accident.
+!.github/
+!AGENTS.md
+!SKILL.md
+
+
+# -----------------------------------------------------------------------------
+# Test fixtures — intentional exceptions
+# -----------------------------------------------------------------------------
+# HQE acceptance/security tests may need committed fake credentials, .env files,
+# ignored-file examples, archives, generated-looking paths, or suspicious names.
+# These exceptions allow those files under the controlled fixture trees.
+#
+# Never place real credentials in fixtures.
+
+!tests/
+!tests/fixtures/
+!tests/fixtures/**
+!tests/acceptance/
+!tests/acceptance/**
+
+# Allow explicit fake environment/credential fixture files.
+!tests/fixtures/**/.env
+!tests/fixtures/**/.env.*
+!tests/fixtures/**/*.pem
+!tests/fixtures/**/*.key
+!tests/fixtures/**/*.token
+!tests/fixtures/**/credentials.json
+!tests/fixtures/**/secrets.json
+!tests/fixtures/**/*.zip
+
+!tests/acceptance/**/.env
+!tests/acceptance/**/.env.*
+!tests/acceptance/**/*.pem
+!tests/acceptance/**/*.key
+!tests/acceptance/**/*.token
+!tests/acceptance/**/credentials.json
+!tests/acceptance/**/secrets.json
+!tests/acceptance/**/*.zip
+
+
+# -----------------------------------------------------------------------------
+# Repository files that must remain tracked
+# -----------------------------------------------------------------------------
+
+!.gitignore
+!.gitattributes
+!.editorconfig
+!.github/
+!.github/**
+!README.md
+!LICENSE
+!NOTICE
+!VERSION
+!CHANGELOG.md
+!SKILL.md
+!pyproject.toml
+!requirements.txt
+!requirements-dev.txt
+!uv.lock
+!poetry.lock
+!Pipfile.lock
+!package.json
+!package-lock.json
+!pnpm-lock.yaml
+!yarn.lock
+!bun.lockb
+!Cargo.toml
+!Cargo.lock
+
+
+# =============================================================================
+# End Skill-HQE .gitignore
+# =============================================================================

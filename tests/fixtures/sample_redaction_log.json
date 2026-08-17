@@ -1,0 +1,30 @@
+{
+  "run_id": "run-2026-08-17-001",
+  "timestamp": "2026-08-17T08:10:00Z",
+  "total_redactions": 3,
+  "by_type": {
+    "AWS_ACCESS_KEY": 2,
+    "SLACK_TOKEN": 1
+  },
+  "files_scanned": 42,
+  "redactions": [
+    {
+      "file": "config/.env.test",
+      "line": 4,
+      "secret_type": "AWS_ACCESS_KEY",
+      "replacement": "REDACTED_AWS_ACCESS_KEY_1"
+    },
+    {
+      "file": "config/.env.test",
+      "line": 5,
+      "secret_type": "AWS_ACCESS_KEY",
+      "replacement": "REDACTED_AWS_ACCESS_KEY_2"
+    },
+    {
+      "file": "services/notifier.py",
+      "line": 18,
+      "secret_type": "SLACK_TOKEN",
+      "replacement": "REDACTED_SLACK_TOKEN_1"
+    }
+  ]
+}

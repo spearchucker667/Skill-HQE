@@ -1,0 +1,6 @@
+{
+  "name": "broken-ci-service",
+  "scripts": {
+    "test": "exit 1"
+  }
+}
