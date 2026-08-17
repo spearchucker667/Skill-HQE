@@ -33,17 +33,19 @@ PATTERNS = [
     ("OPENAI_API_KEY", re.compile(r"sk-[a-zA-Z0-9]{32,}")),
 ]
 
-# Standard dummy/fake tokens explicitly used in unit tests
+# Standard dummy/fake tokens explicitly used in unit tests.
+# These use non-matching formats to avoid GitHub secret scanning false positives.
+# They are intentionally NOT real secret formats.
 KNOWN_TEST_TOKENS = {
-    "AKIAIOSFODNN7EXAMPLE",
-    "AKIA1234567890ABCDEF",
-    "xoxb-1234567890-123456789012",
-    "xoxb-123456789012-1234567890123-abcdefghijklmnopqrstuvwx",
-    "ghp_123456789012345678901234567890123456",
-    "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    "sk-abcdefghijklmnopqrstuvwxyz123456",
-    "sk-abcdefghijklmnopqrstuvwxyz0123456789",
-    "AIzaSyDummyKeyForTestingPurposes12345",
+    "FAKE_TOKEN_SLACK_1",
+    "FAKE_TOKEN_SLACK_2",
+    "FAKE_TOKEN_GITHUB_1",
+    "FAKE_TOKEN_GITHUB_2",
+    "FAKE_TOKEN_AWS_1",
+    "FAKE_TOKEN_AWS_2",
+    "FAKE_TOKEN_OPENAI_1",
+    "FAKE_TOKEN_OPENAI_2",
+    "FAKE_TOKEN_GOOGLE_1",
 }
 
 DEFAULT_SKIP_DIRS = {
