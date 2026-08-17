@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Finding",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^HQE-[A-Z]+-[0-9]+$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["BOOT", "SEC", "BUG", "REL", "PERF", "UX", "DX", "DOC", "DEBT", "DEPS"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["CONFIRMED", "STRONGLY_SUPPORTED", "INFERRED", "SUSPECTED", "NOT_REPRODUCED", "FIXED"]
+    },
+    "affected_component": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "start_line": {
+            "type": "integer"
+          },
+          "end_line": {
+            "type": "integer"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          }
+        },
+        "required": ["path"]
+      },
+      "minItems": 1
+    },
+    "observed_behavior": {
+      "type": "string"
+    },
+    "expected_behavior": {
+      "type": "string"
+    },
+    "root_cause": {
+      "type": "string"
+    },
+    "impact": {
+      "type": "string"
+    },
+    "reproduction": {
+      "type": "string"
+    },
+    "remediation": {
+      "type": "string"
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["S", "M", "L"]
+    },
+    "regression_risk": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High"]
+    },
+    "related_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "category",
+    "severity",
+    "confidence",
+    "status",
+    "evidence",
+    "effort"
+  ]
+}

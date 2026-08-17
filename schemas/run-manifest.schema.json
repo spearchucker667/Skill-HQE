@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Run Manifest",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository_path": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object"
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subsystem": { "type": "string" },
+          "files": { "type": "integer" },
+          "reviewed": { "type": "boolean" },
+          "depth": { "type": "string" },
+          "findings_count": { "type": "integer" }
+        }
+      }
+    },
+    "unreviewed_surfaces": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_files_scanned": { "type": "integer" },
+        "total_findings": { "type": "integer" },
+        "critical_findings": { "type": "integer" },
+        "high_findings": { "type": "integer" }
+      }
+    }
+  },
+  "required": ["timestamp", "repository_path", "mode", "summary"]
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Agent Handoff",
+  "type": "object",
+  "properties": {
+    "mission": { "type": "string" },
+    "repository_path": { "type": "string" },
+    "current_state": { "type": "string" },
+    "do_not_assume": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "finding_inventory": {
+      "type": "array",
+      "items": { "$ref": "finding.schema.json" }
+    },
+    "priority_order": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_changes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tests_to_update": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "validation_commands": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "regression_risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "completion_criteria": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "do_not_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["mission", "repository_path", "finding_inventory", "required_changes", "validation_commands", "completion_criteria"]
+}
