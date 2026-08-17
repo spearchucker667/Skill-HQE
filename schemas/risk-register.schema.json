@@ -1,0 +1,28 @@
+{
+  "title": "HQE Risk Register",
+  "type": "object",
+  "properties": {
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "description"
+        ]
+      }
+    }
+  },
+  "required": [
+    "risks"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

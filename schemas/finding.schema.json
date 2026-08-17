@@ -243,6 +243,20 @@
           "exposure_evidence"
         ]
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "SEC"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "taint_chain"
+        ]
+      }
     }
   ]
 }

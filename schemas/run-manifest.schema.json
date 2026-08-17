@@ -117,9 +117,13 @@
     }
   },
   "required": [
+    "run_id",
     "timestamp",
     "repository_path",
+    "protocol_details",
+    "limits",
     "mode",
+    "coverage",
     "summary"
   ]
 }

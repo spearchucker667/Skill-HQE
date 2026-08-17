@@ -18,10 +18,9 @@ Only the current main branch and latest released tagged versions receive active 
 ## 2. Threat Vector Scope
 
 We specifically welcome security reports concerning:
-- **Prompt Injection Bypasses**: Scenarios where untrusted repository content causes an agent executing the HQE skill to execute arbitrary shell commands, ignore safety rules, or leak private environment details.
-- **Unsafe Script Execution**: Flaws in `scripts/inventory_repo.py`, `scripts/validate_findings.py`, or `scripts/check_skill.py` that could allow path traversal, command injection, or denial of service on the host machine.
+- **Prompt Injection Bypasses**: Scenarios where untrusted repository content causes an agent executing the HQE skill to bypass safety rules.
+- **Unsafe Script Execution**: Flaws in `scripts/inventory_repo.py`, `scripts/validate_findings.py`, or `scripts/check_skill.py`.
 - **Schema Validation Gaps**: Weaknesses in JSON schemas that allow malicious or malformed finding payloads to bypass validation.
-- **Credential Leakage**: Cases where built-in redaction rules fail to scrub sensitive authentication tokens or private keys.
 
 ---
 

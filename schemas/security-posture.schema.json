@@ -1,0 +1,22 @@
+{
+  "title": "HQE Security Posture",
+  "type": "object",
+  "properties": {
+    "trust_boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "auth_mechanisms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "trust_boundaries"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

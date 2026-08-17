@@ -1,0 +1,22 @@
+{
+  "title": "HQE Reliability Summary",
+  "type": "object",
+  "properties": {
+    "single_points_of_failure": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "concurrency_issues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "single_points_of_failure"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -18,4 +18,4 @@ This directory contains internal engineering audits, historical agent handoff no
 | [`design-notes/`](design-notes/) | Draft design proposals and architectural sketches preceding formal ADRs. |
 | [`benchmarks/`](benchmarks/) | Performance benchmarks, token economy metrics, and latency logs. |
 | [`experiments/`](experiments/) | Experimental prompt formulations, alternative schemas, and prototype scripts. |
-| [`generated/`](generated/) | Temporary generated artifacts, test outputs, and validation dumps. |
+| `generated/` | Temporary generated artifacts, test outputs, and validation dumps. |

@@ -1,0 +1,16 @@
+{
+  "title": "HQE Unknowns",
+  "type": "object",
+  "properties": {
+    "unknown_components": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "unknown_components"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

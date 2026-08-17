@@ -1,0 +1,16 @@
+{
+  "title": "HQE Pattern Findings",
+  "type": "object",
+  "properties": {
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "patterns"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

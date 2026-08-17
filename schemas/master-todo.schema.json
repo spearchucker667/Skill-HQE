@@ -1,0 +1,28 @@
+{
+  "title": "HQE Master TODO",
+  "type": "object",
+  "properties": {
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string"
+          },
+          "effort": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "task",
+          "effort"
+        ]
+      }
+    }
+  },
+  "required": [
+    "tasks"
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

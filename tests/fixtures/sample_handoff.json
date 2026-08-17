@@ -35,6 +35,15 @@
       "likelihood": "High",
       "likelihood_justification": "Missing env var common",
       "exposure_evidence": "Found in auth.rs",
+      "taint_chain": {
+        "source": "Environment variable JWT_SECRET",
+        "transforms": [
+          "Fallback unwrap_or_else to hardcoded static string"
+        ],
+        "validation_boundary": "JWT signature verification",
+        "sink": "DecodingKey::from_secret",
+        "impact": "Auth bypass"
+      },
       "validation": [
         "cargo test"
       ],

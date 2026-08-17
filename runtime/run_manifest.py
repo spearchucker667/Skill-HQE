@@ -87,6 +87,9 @@ class RunManifestGenerator:
                 "platform": subprocess.sys.platform
             },
             "commands": [t["command"] for t in (evidence_store.tool_executions if evidence_store else [])],
+            "limits": {
+                "max_files": 1000
+            },
             "mode": self.mode,
             "coverage": subsystems_coverage or [
                 {

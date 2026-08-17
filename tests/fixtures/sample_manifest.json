@@ -2,6 +2,12 @@
   "run_id": "HQE-RUN-20260817-001",
   "timestamp": "2026-08-17T07:00:00Z",
   "repository_path": "/Users/super_user/Projects/example-app",
+  "protocol_details": {
+    "version": "5.0.0"
+  },
+  "limits": {
+    "max_files": 100
+  },
   "mode": "audit",
   "options": {
     "exhaustive": true,

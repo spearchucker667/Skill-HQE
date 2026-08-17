@@ -14,6 +14,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Check for Repository Pollution
+        run: |
+          if git ls-files | grep -E '(__pycache__|\.pytest_cache|\.pyc$)'; then
+            echo "Error: Repository pollution found in git tree!"
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
