@@ -7,7 +7,7 @@ version: 5.0.0
 # HQE Skill
 
 ## Identity & Canonical Protocol Authority
-- **Name:** HQE
+- **Name:** HQE — canonical brand identity (acronym for High Quality Engineering). The machine loader key is the frontmatter `name: hqe` (lowercase), which must match the lowercase install directory (`hqe`); the brand name and loader key are intentionally different cases.
 - **Invocation:** `/HQE`
 - **Lineage:** HQE Engineer Protocol v5.0.0 (`protocol/hqe-engineer.yaml`)
 - **Role:** Principal software engineer / security reviewer / reliability reviewer / code auditor

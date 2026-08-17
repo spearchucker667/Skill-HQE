@@ -158,6 +158,48 @@ class Finding:
         data["related_findings"] = list(self.related_findings)
         return data
 
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "Finding":
+        """Build a Finding from a serialized dict (lenient, mirrors to_dict).
+
+        Missing keys fall back to the same defaults the previous inline
+        loaders used. Validation stays at ``FindingRegistry.register`` so
+        loading and validation remain separate concerns.
+        """
+        evidence: list[CodeEvidence] = []
+        for ev in raw.get("evidence", []):
+            if isinstance(ev, CodeEvidence):
+                evidence.append(ev)
+            elif isinstance(ev, dict):
+                evidence.append(CodeEvidence.from_dict(ev))
+        return cls(
+            id=raw.get("id", ""),
+            title=raw.get("title", ""),
+            category=raw.get("category", ""),
+            severity=raw.get("severity", ""),
+            confidence=raw.get("confidence", "FACT"),
+            status=raw.get("status", "CONFIRMED"),
+            affected_component=raw.get("affected_component", ""),
+            observed_behavior=raw.get("observed_behavior", ""),
+            expected_behavior=raw.get("expected_behavior", ""),
+            root_cause=raw.get("root_cause", ""),
+            impact=raw.get("impact", ""),
+            remediation=raw.get("remediation", ""),
+            effort=raw.get("effort", "S"),
+            regression_risk=raw.get("regression_risk", "Low"),
+            evidence=evidence,
+            reproduction=raw.get("reproduction"),
+            preconditions=raw.get("preconditions", []),
+            exploitability=raw.get("exploitability"),
+            blast_radius=raw.get("blast_radius"),
+            likelihood=raw.get("likelihood"),
+            likelihood_justification=raw.get("likelihood_justification"),
+            exposure_evidence=raw.get("exposure_evidence"),
+            taint_chain=raw.get("taint_chain"),
+            validation=raw.get("validation", []),
+            related_findings=raw.get("related_findings", []),
+        )
+
 
 def _schema_validation_errors(finding: "Finding") -> list[str]:
     """Validate the serialized finding against ``schemas/finding.schema.json``.
@@ -216,6 +258,17 @@ class FindingRegistry:
         if errors:
             raise ValueError(f"Finding validation failed for {finding.id}:\n" + "\n".join(f" - {e}" for e in errors))
         self.findings[finding.id] = finding
+
+    def load_many(self, raw_findings: list[dict[str, Any]]) -> list[Finding]:
+        """Load and register findings from serialized dicts, in order.
+
+        Registration validates each finding (semantic rules + schema); the
+        first invalid finding raises, matching the previous per-item loop.
+        """
+        loaded = [Finding.from_dict(raw) for raw in raw_findings]
+        for finding in loaded:
+            self.register(finding)
+        return loaded
 
     def get(self, finding_id: str) -> Finding | None:
         return self.findings.get(finding_id)

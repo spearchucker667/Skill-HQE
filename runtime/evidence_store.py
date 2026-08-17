@@ -60,6 +60,28 @@ class CodeEvidence:
             data["source_hash"] = self.source_hash
         return data
 
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "CodeEvidence":
+        """Build a CodeEvidence from a serialized dict (lenient, mirrors to_dict).
+
+        Reads all fields so verification state (``verified``,
+        ``verification_method``, ``verified_at``, ``source_hash``) survives a
+        round-trip — the previous inline loaders dropped those four fields.
+        """
+        return cls(
+            path=raw.get("path", ""),
+            snippet=raw.get("snippet", ""),
+            start_line=raw.get("start_line"),
+            end_line=raw.get("end_line"),
+            symbol=raw.get("symbol"),
+            anchor=raw.get("anchor"),
+            grep_signature=raw.get("grep_signature"),
+            verified=raw.get("verified", False),
+            verification_method=raw.get("verification_method"),
+            verified_at=raw.get("verified_at"),
+            source_hash=raw.get("source_hash"),
+        )
+
 
 class EvidenceStore:
     def __init__(self, repo_root: Path | str = "."):

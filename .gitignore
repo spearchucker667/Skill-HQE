@@ -621,6 +621,7 @@ sbom.cdx.json
 .continue/
 .aider*
 .agent-cache/
+.agents/
 .agent-state/
 .agent-tmp/
 /.freebuff

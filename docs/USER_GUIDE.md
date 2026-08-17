@@ -49,8 +49,9 @@ cp -r /path/to/Skill-HQE ~/.gemini/antigravity-cli/builtin/skills/hqe
 cp -r /path/to/Skill-HQE /your/project/.gemini/skills/hqe
 ```
 
-### 2.2 Kimi Code CLI (`kimi`) / oh-my-kimi
+### 2.2 Kimi Code CLI (`kimi`) / oh-my-kimi / Vibe
 ```bash
+# Vibe also requires skill_paths = ["~/.agents/skills"] in ~/.vibe/config.toml:
 cp -r /path/to/Skill-HQE ~/.agents/skills/hqe
 ```
 
@@ -60,6 +61,8 @@ cp -r /path/to/Skill-HQE ~/.agents/skills/hqe
 mkdir -p .agents/skills
 cp -r /path/to/Skill-HQE .agents/skills/hqe
 ```
+
+**Loader requirement:** Loaders key skills by the install directory name and the `name:` field in `SKILL.md` frontmatter, which must match. This repo installs as the lowercase `hqe` directory with `name: hqe`; renaming one without the other prevents the skill from loading.
 
 ---
 

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local risk scan hardening: path-traversal guard, prompt-injection marker detection, TODO/FIXME/HACK marker detection.
 
 ### Fixed
+- `Finding.from_dict`/`CodeEvidence.from_dict` and `FindingRegistry.load_many` replace the duplicated inline finding loaders in `scripts/build_artifacts.py` and `scripts/create_run_manifest.py`; loading now preserves evidence verification state (`verified`, `verification_method`, `verified_at`, `source_hash`) that the inline loaders silently dropped.
 - `.github/workflows/security-scan.yml` now uses `scripts/scan_secrets.py`, reporting `path:line:TYPE` without leaking potential secrets and supporting fixture allowlists.
 - `.github/workflows/validate-skill.yml` now installs dev dependencies before running `check_skill.py`.
 - `protocol/README.md` no longer references non-existent Rust CLI scripts.
@@ -58,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - 21 workflow playbooks expanded for depth and consistency, covering every workflow in `workflows/`.
+- SKILL.md frontmatter `name` normalized to `hqe` to match the documented lowercase install directory (`~/.agents/skills/hqe`); skill loaders require the directory name and the frontmatter `name` to match.
 - `README.md`, `CONTRIBUTING.md`, `SECURITY.md` updated to reflect current runtime, artifact model, and validation commands.
 
 ---

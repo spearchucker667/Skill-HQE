@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
-from runtime import FindingRegistry, Finding, CodeEvidence, RunManifestGenerator
+from runtime import FindingRegistry, RunManifestGenerator
 
 
 def main() -> int:
@@ -44,47 +44,7 @@ def main() -> int:
             with f_path.open("r", encoding="utf-8") as fh:
                 raw_data = json.load(fh)
             raw_list = raw_data if isinstance(raw_data, list) else [raw_data]
-            for raw in raw_list:
-                evidence_list = []
-                for ev in raw.get("evidence", []):
-                    if isinstance(ev, dict):
-                        evidence_list.append(CodeEvidence(
-                            path=ev.get("path", ""),
-                            snippet=ev.get("snippet", ""),
-                            start_line=ev.get("start_line"),
-                            end_line=ev.get("end_line"),
-                            symbol=ev.get("symbol"),
-                            anchor=ev.get("anchor"),
-                            grep_signature=ev.get("grep_signature")
-                        ))
-                f = Finding(
-                    id=raw.get("id", ""),
-                    title=raw.get("title", ""),
-                    category=raw.get("category", ""),
-                    severity=raw.get("severity", ""),
-                    confidence=raw.get("confidence", "FACT"),
-                    status=raw.get("status", "CONFIRMED"),
-                    affected_component=raw.get("affected_component", ""),
-                    observed_behavior=raw.get("observed_behavior", ""),
-                    expected_behavior=raw.get("expected_behavior", ""),
-                    root_cause=raw.get("root_cause", ""),
-                    impact=raw.get("impact", ""),
-                    remediation=raw.get("remediation", ""),
-                    effort=raw.get("effort", "S"),
-                    regression_risk=raw.get("regression_risk", "Low"),
-                    evidence=evidence_list,
-                    reproduction=raw.get("reproduction"),
-                    preconditions=raw.get("preconditions", []),
-                    exploitability=raw.get("exploitability"),
-                    blast_radius=raw.get("blast_radius"),
-                    likelihood=raw.get("likelihood"),
-                    likelihood_justification=raw.get("likelihood_justification"),
-                    exposure_evidence=raw.get("exposure_evidence"),
-                    taint_chain=raw.get("taint_chain"),
-                    validation=raw.get("validation", []),
-                    related_findings=raw.get("related_findings", [])
-                )
-                registry.register(f)
+            registry.load_many(raw_list)
         except Exception as exc:
             if args.best_effort:
                 print(f"Warning: Failed to load findings from {f_path}: {exc}", file=sys.stderr)

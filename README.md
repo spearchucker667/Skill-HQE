@@ -166,13 +166,15 @@ Invoke `/HQE` with any of the following 17 specialized operational modes:
 # Antigravity CLI / Gemini CLI:
 cp -r /path/to/Skill-HQE ~/.gemini/antigravity-cli/builtin/skills/hqe
 
-# Kimi Code / oh-my-kimi:
+# Kimi Code / oh-my-kimi / Vibe (requires skill_paths = ["~/.agents/skills"] in ~/.vibe/config.toml):
 cp -r /path/to/Skill-HQE ~/.agents/skills/hqe
 
 # Claude Code / Cursor / Windsurf / Roo Code / Cline:
 mkdir -p .agents/skills
 cp -r /path/to/Skill-HQE .agents/skills/hqe
 ```
+
+**Loader requirement:** Skill loaders key a skill by its install directory name and the `name:` field in `SKILL.md` frontmatter — the two must match. This repository installs as the lowercase `hqe` directory with `name: hqe`; renaming one without the other (e.g., leaving `name: HQE` in the frontmatter) prevents the skill from loading.
 
 ### 2. Basic Invocation Examples
 
