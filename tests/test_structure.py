@@ -42,7 +42,7 @@ def test_all_canonical_scripts_exist():
         "validate_findings.py", "validate_manifest.py", "validate_session_log.py",
         "validate_semantics.py", "validate_protocol_bundle.py",
         "build_artifacts.py", "create_run_manifest.py", "check_protocol_sync.py",
-        "package_skill.py", "check_skill.py"
+        "package_skill.py", "check_skill.py", "check_release_contents.py"
     ):
         p = ROOT / "scripts" / f
         assert p.is_file(), f"Missing script: scripts/{f}"

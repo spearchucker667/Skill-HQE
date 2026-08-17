@@ -48,7 +48,7 @@ def check_sync(root_path: Path) -> list[str]:
                 if len(parts) >= 2:
                     expected_hashes[parts[1].strip()] = parts[0].strip()
 
-        for filename in ("hqe-engineer.yaml", "hqe-engineer-schema.json", "validate.py"):
+        for filename in REQUIRED_PROTOCOL_FILES:
             target_file = protocol_dir / filename
             if not target_file.is_file():
                 errors.append(f"Missing protocol file: protocol/{filename}")
@@ -57,17 +57,8 @@ def check_sync(root_path: Path) -> list[str]:
             if filename in expected_hashes:
                 if actual_hash != expected_hashes[filename]:
                     errors.append(f"Checksum mismatch for protocol/{filename}: expected {expected_hashes[filename]}, got {actual_hash}")
-
-    # 2. Check synchronization with package canonical-protocol if present
-    if pkg_canonical.is_dir():
-        for filename in ("hqe-engineer.yaml", "hqe-engineer-schema.json", "validate.py"):
-            f_main = protocol_dir / filename
-            f_pkg = pkg_canonical / filename
-            if f_main.is_file() and f_pkg.is_file():
-                h_main = compute_sha256(f_main)
-                h_pkg = compute_sha256(f_pkg)
-                if h_main != h_pkg:
-                    errors.append(f"Protocol drift: protocol/{filename} ({h_main}) != package/{filename} ({h_pkg})")
+            else:
+                errors.append(f"Missing expected hash in SOURCE_CHECKSUMS.sha256 for protocol/{filename}")
 
     return errors
 

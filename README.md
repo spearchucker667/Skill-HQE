@@ -22,7 +22,7 @@
   <b>Evidence-first repository health auditing, security vulnerability discovery, architectural synthesis, and verified minimal-change remediation for autonomous AI agents.</b>
 </p>
 
-[Quickstart](#-quickstart--installation) • [Operating Modes](#-operating-modes) • [Architecture](#-architecture--repository-structure) • [Protocol Validation](#-protocol-validation) • [Security Model](#-security--trust-model) • [Documentation](#-canonical-documentation) • [Legal](#-legal--compliance)
+[Quickstart](#-quickstart--installation) • [Operating Modes](#-operating-modes--routing) • [What Happens When You Run /HQE](#-what-happens-when-you-run-hqe) • [Architecture](#-architecture--repository-structure) • [Protocol Validation](#-protocol-validation) • [Security Model](#-security--trust-model) • [Documentation](#-canonical-documentation) • [Legal](#-legal--compliance)
 
 ---
 
@@ -30,26 +30,76 @@
 
 ## 📑 Table of Contents
 - [Executive Overview](#-executive-overview)
+- [What Problem Does HQE Solve?](#-what-problem-does-hqe-solve)
+- [Target Audience](#-target-audience)
+- [What Happens When You Run `/HQE`?](#-what-happens-when-you-run-hqe)
 - [Key Capabilities](#-key-capabilities)
 - [Non-Negotiable Operating Principles](#-non-negotiable-operating-principles)
 - [Operating Modes & Routing](#-operating-modes--routing)
-- [Protocol Validation](#-protocol-validation)
-- [Architecture & Repository Structure](#-architecture--repository-structure)
 - [Quickstart & Installation](#-quickstart--installation)
-- [Finding & Artifact Model](#-finding--artifact-model)
-- [CLI Helper Tools](#-cli-helper-tools)
+- [Finding & Deliverable Artifact Model](#-finding--deliverable-artifact-model)
+- [Architecture & Repository Structure](#-architecture--repository-structure)
+- [Deterministic Python Runtime Engine](#-deterministic-python-runtime-engine)
+- [CLI Helper Utilities](#-cli-helper-utilities)
+- [Protocol Validation & CI/CD](#-protocol-validation--cicd)
 - [Security & Trust Model](#-security--trust-model)
-- [CI/CD & Verification](#-cicd--verification)
 - [Canonical Documentation](#-canonical-documentation)
+- [Development & Contribution Process](#-development--contribution-process)
 - [Legal & Compliance](#-legal--compliance)
 
 ---
 
 ## 🎯 Executive Overview
 
-**HQE (`/HQE`)** is a portable, production-grade agent skill that equips AI coding agents with the rigor, skepticism, and methodical precision of a Principal Staff Software Engineer and Principal Security Auditor.
+**HQE (`/HQE`)** is a portable, production-grade agent skill that equips AI coding agents with the rigor, skepticism, and methodical precision of a **Principal Staff Software Engineer and Principal Security Auditor**.
 
-Built directly from and validated against **HQE Engineer Protocol v5.0.0** ([`protocol/hqe-engineer.yaml`](protocol/hqe-engineer.yaml)), this skill eliminates shallow, hallucinated code reviews by enforcing **mandatory static/dynamic evidence**, **explicit uncertainty tagging** (`[FACT]`, `[INFERENCE]`, `[HYPOTHESIS]`, `[NEEDS_VERIFICATION]`), **1–10 health scoring**, **severity gates with likelihood models**, **security taint chains**, **change budgets ($\le 5$ files)**, and **anti-regression controls**.
+Built directly from and validated against **HQE Engineer Protocol v5.0.0** ([`protocol/hqe-engineer.yaml`](protocol/hqe-engineer.yaml)), this skill eliminates shallow, hallucinated code reviews by enforcing **mandatory static/dynamic evidence triads**, **explicit uncertainty tagging** (`[FACT]`, `[INFERENCE]`, `[HYPOTHESIS]`, `[NEEDS_VERIFICATION]`), **1–10 health scoring**, **severity gates with likelihood models**, **security taint chains**, **change budgets ($\le 5$ files)**, **anti-regression controls**, and a **deterministic Python runtime control plane**.
+
+---
+
+## 🛑 What Problem Does HQE Solve?
+
+Standard AI coding assistants and generic code-review prompts suffer from well-documented systemic failures:
+1. **Superficial Pattern Matching**: Generating hundreds of cosmetic style warnings while completely missing architectural boundary violations, race conditions, and memory leaks.
+2. **Hallucinated Defect Claims**: Claiming vulnerabilities or bugs exist without providing verified line ranges or demonstrable execution paths.
+3. **Over-Refactoring / Scope Creep**: Attempting to rewrite dozens of unrelated files during simple bug fixes, creating massive regression risk.
+4. **Unverifiable Remediation**: Declaring a bug "fixed" without running or providing executable verification tests.
+5. **Prompt Injection Susceptibility**: Obeying malicious instructions embedded inside audited source code, comments, or test fixtures.
+
+HQE solves these challenges by transforming the AI agent into a **protocol-bound engineering auditor** backed by deterministic verification tools.
+
+---
+
+## 👥 Target Audience
+
+- **Autonomous AI Coding Agents** (Antigravity CLI, Kimi Code, Claude Code, Cursor, Windsurf, Roo Code, Cline, Aider) requiring structured engineering discipline.
+- **Principal Software Engineers & Architects** conducting codebase due diligence, security audits, or architectural health assessments.
+- **Security Teams** reviewing third-party repositories, supply chain integrity, and trust boundaries.
+- **Engineering Leads & Maintainers** establishing objective quality gates and minimal-change remediation workflows.
+
+---
+
+## 🔄 What Happens When You Run `/HQE`?
+
+When you type `/HQE` (or any of its 17 operational modes like `/HQE audit` or `/HQE security`), the agent executes a structured, multi-phase engineering pipeline:
+
+```mermaid
+flowchart TD
+    Start[User Invokes /HQE] --> Preflight[Phase 0: Inventory & Ecosystem Detection]
+    Preflight --> Triage{Repo > 50 Files?}
+    Triage -- Yes --> P05[Phase 0.5: Triage Core vs Satellite Modules]
+    Triage -- No --> Deep[Phases 1–4: Deep Analytical Audit]
+    P05 --> Deep
+    Deep --> Gate[Severity Gate & Taint Chain Validation]
+    Gate --> Runtime[Runtime Engine State Machine & Assembly]
+    Runtime --> Output[Generate HQE_REPORT.md & 9 Deliverables]
+```
+
+1. **Pre-flight & Discovery (Phase 0)**: Automatically inventories all repository files, classifies file types, detects package managers across 22+ ecosystems, discovers existing test commands (`pytest`, `cargo test`, `npm test`), and verifies clean working tree state.
+2. **Large Codebase Triage (Phase 0.5)**: If the repository exceeds 50 files, prioritizes core business logic, public APIs, and security perimeters while documenting explicit coverage bounds.
+3. **Deep Multi-Perspective Audit (Phases 1–4)**: Interleaves security taint tracking, reliability & concurrency analysis, performance profiling, and testing gap evaluation.
+4. **Severity & Likelihood Gating**: Every finding is validated against strict severity gates. High-severity claims without exposure proof are downgraded or marked `[NEEDS_VERIFICATION]`.
+5. **Deterministic Artifact Assembly**: The `runtime/` engine assembles the executive summary (`HQE_REPORT.md`), 9 canonical markdown deliverables, and machine-readable JSON manifests (`HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`).
 
 ---
 
@@ -60,15 +110,15 @@ Built directly from and validated against **HQE Engineer Protocol v5.0.0** ([`pr
 - 🚦 **Severity Gates & Likelihood Models**: CRITICAL/HIGH findings require explicit preconditions, exploitability, blast radius, and likelihood justification.
 - 🧱 **Architectural Cohesion**: Identification of circular dependencies, boundary leaks, tight coupling, and abstraction violations.
 - 🛠️ **Minimal-Change Remediation**: Surgical root-cause fixes adhering to a strict change budget ($\le 5$ files) and anti-regression rules (`[BEHAVIOR CHANGE]`, `[NEW_DEPENDENCY]`).
-- 📋 **Canonical Artifact System**: Generates the 9 canonical HQE audit deliverables (Risk Register, Master TODO, Pattern Findings, Quick Wins vs Structural, Security Posture, Reliability, Testing Gaps, Unknowns, Confidence Declaration).
+- 📋 **Canonical Deliverable System**: Generates the 9 canonical HQE audit deliverables (Risk Register, Master TODO, Pattern Findings, Quick Wins vs Structural, Security Posture, Reliability, Testing Gaps, Unknowns, Confidence Declaration).
 - 🔒 **Prompt Injection Immunity**: Treats all audited code, fixtures, comments, and instructions as passive untrusted data.
-- ⚙️ **Local-First Helper Tooling**: Portable, dependency-light Python utilities with deterministic secret redaction.
+- ⚙️ **Deterministic Control Plane**: Lightweight Python runtime layer (`runtime/`) maintaining finding lifecycles, session persistence, and reproducible run manifests.
 
 ---
 
 ## 📜 Non-Negotiable Operating Principles
 
-When an AI agent activates `/HQE`, it must adhere to the core tenets specified in [`SKILL.md`](SKILL.md):
+When an AI agent activates `/HQE`, it must adhere to the core tenets specified in [`SKILL.md`](SKILL.md) and [`AGENTS.md`](AGENTS.md):
 
 ```text
 1.  Inspect before asserting         8.  Minimal-change remediation bias (<=5 files)
@@ -84,209 +134,33 @@ When an AI agent activates `/HQE`, it must adhere to the core tenets specified i
 
 ## 🕹️ Operating Modes & Routing
 
-Invoke `/HQE` with any of the following modes:
+Invoke `/HQE` with any of the following 17 specialized operational modes:
 
 | Mode | Command | Objective & Focus Area | Workflow Reference |
 | :--- | :--- | :--- | :--- |
-| **Audit** | `/HQE audit` | Comprehensive repository audit emitting canonical artifacts. | [`workflows/full-audit.md`](workflows/full-audit.md) |
-| **Security** | `/HQE security` | Attack surface, trust boundaries, auth logic, taint chains. | [`workflows/security-audit.md`](workflows/security-audit.md) |
+| **Audit** | `/HQE audit` | Comprehensive repository audit emitting all 9 canonical deliverables. | [`workflows/full-audit.md`](workflows/full-audit.md) |
+| **Security** | `/HQE security` | Attack surface, trust boundaries, auth logic, and taint chains. | [`workflows/security-audit.md`](workflows/security-audit.md) |
 | **PR Review** | `/HQE pr-review` | Phase -1 diff harvest, changed files, and affected adjacent code. | [`workflows/pr-review.md`](workflows/pr-review.md) |
-| **Targeted** | `/HQE targeted` | Deep dive into a specific subsystem, bug symptom, or suspect file. | [`workflows/targeted-bug-hunt.md`](workflows/targeted-bug-hunt.md) |
-| **Remediate**| `/HQE remediate`| Implement verified, minimal root-cause fixes respecting change budget. | [`workflows/remediation-run.md`](workflows/remediation-run.md) |
+| **Targeted** | `/HQE targeted <path>` | Deep dive into a specific subsystem, bug symptom, or suspect file. | [`workflows/targeted-bug-hunt.md`](workflows/targeted-bug-hunt.md) |
+| **Remediate**| `/HQE remediate <id>` | Implement verified, minimal root-cause fixes respecting change budget ($\le 5$ files). | [`workflows/remediation-run.md`](workflows/remediation-run.md) |
 | **Verify** | `/HQE verify` | Rigorous Tier 1/2/3 verification proving/disproving fixes. | [`workflows/verification-run.md`](workflows/verification-run.md) |
+| **Architecture**| `/HQE architecture` | Structural cohesion, circular dependencies, modular boundaries, coupling. | [`workflows/architecture-audit.md`](workflows/architecture-audit.md) |
+| **Performance** | `/HQE performance` | Hot paths, algorithmic complexity, I/O bottlenecks, memory bloat. | [`workflows/performance-audit.md`](workflows/performance-audit.md) |
+| **Dependencies**| `/HQE dependencies` | Supply chain security, vulnerable packages, duplicate versions. | [`workflows/dependency-audit.md`](workflows/dependency-audit.md) |
+| **CI/CD** | `/HQE ci` | Pipeline correctness, permission hardening, least-privilege tokens. | [`workflows/ci-audit.md`](workflows/ci-audit.md) |
+| **Testing** | `/HQE tests` | Test suite gaps, fixture realism, flaky tests, coverage blind spots. | [`workflows/testing-audit.md`](workflows/testing-audit.md) |
+| **Documentation**| `/HQE docs` | Documentation accuracy against executable code reality. | [`workflows/documentation-audit.md`](workflows/documentation-audit.md) |
 | **Incident** | `/HQE incident` | Stop-the-line triage, containment, and incident mini-report. | [`workflows/incident-response.md`](workflows/incident-response.md) |
-| **Debug** | `/HQE debug` | Systematic exception and stack trace diagnosis. | [`workflows/debug-error.md`](workflows/debug-error.md) |
-| **Trace** | `/HQE trace` | Multi-hop execution trace and regression isolation. | [`workflows/trace-regression.md`](workflows/trace-regression.md) |
+| **Debug** | `/HQE debug <trace>` | Systematic exception and stack trace diagnosis. | [`workflows/debug-error.md`](workflows/debug-error.md) |
+| **Trace** | `/HQE trace <symbol>` | Multi-hop execution trace and regression isolation. | [`workflows/trace-regression.md`](workflows/trace-regression.md) |
+| **Regression** | `/HQE regression` | Bisect logic, isolate breaking commits across version boundaries. | [`workflows/regression-analysis.md`](workflows/regression-analysis.md) |
 | **Handoff** | `/HQE handoff` | Produce an unambiguous, implementation-ready agent handoff ledger. | [`workflows/handoff-generation.md`](workflows/handoff-generation.md) |
-| **Perf** | `/HQE performance` | Hot paths, algorithmic complexity, I/O bottlenecks, memory bloat. | [`workflows/performance-audit.md`](workflows/performance-audit.md) |
-| **Reliability**| `/HQE reliability` | Timeouts, retries, race conditions, idempotency, data consistency. | [`references/reliability-review.md`](references/reliability-review.md) |
-
----
-
-## 🔍 Protocol Validation
-
-Validate the embedded canonical HQE protocol and active Draft-7 JSON schema:
-
-```bash
-# Validate protocol YAML against schema
-python3 protocol/validate.py protocol/hqe-engineer.yaml
-
-# Validate schema structure
-python3 protocol/validate.py --schema
-
-# Run strict protocol bundle integrity checks
-python3 scripts/validate_protocol_bundle.py --strict-schema-metadata
-
-# Run protocol contract tests
-pytest tests/test_protocol_contract.py tests/test_protocol_skill_parity.py
-```
-
----
-
-## 🏛️ Architecture & Repository Structure
-
-```text
-Skill-HQE/
-├── 📄 SKILL.md                  # Root skill operational projection & control plane
-├── 📄 LICENSE                   # Apache-2.0 open-source license
-├── 📄 NOTICE                    # Attribution, source lineage, and copyright notice
-├── 📄 VERSION                   # Semantic version (4.2.1)
-├── 📄 CHANGELOG.md              # Historical version changelog
-├── 📄 pyproject.toml            # Project packaging & test configuration
-├── 📄 requirements-dev.txt      # Development & validation dependencies
-│
-├── 📂 protocol/                 # Embedded canonical HQE Protocol v4.2.1
-│   ├── hqe-engineer.yaml        # Active canonical protocol YAML
-│   ├── hqe-engineer-schema.json # Active Draft-7 JSON schema
-│   ├── validate.py              # Canonical protocol validator
-│   ├── README.md                # Protocol documentation
-│   ├── VALIDATORS.md            # Validator usage specifications
-│   └── SOURCE_CHECKSUMS.sha256  # Source cryptographic checksums
-│
-├── 📂 docs/                     # Canonical engineering documentation
-│   ├── ARCHITECTURE.md          # Architectural specification and layer design
-│   ├── CAPABILITY_MAPPING.md    # Source-to-skill capability mapping audit
-│   ├── MIGRATION_FROM_HQE_WORKBENCH.md # Migration guide from Workbench
-│   ├── DESIGN_DECISIONS.md      # Architectural Decision Records (ADRs)
-│   ├── SOURCE_AUDIT.md          # Licensing, lineage, and checksum audit
-│   ├── DEVELOPER_GUIDE.md       # Developer and extension manual
-│   ├── FINDING_SPECIFICATION.md # Finding format, taxonomy, and severity rubric
-│   ├── SECURITY_MODEL.md        # Security boundaries and isolation architecture
-│   ├── THREAT_MODEL.md          # STRIDE threat model and risk mitigations
-│   └── USER_GUIDE.md            # Comprehensive user manual
-│
-├── 📂 references/               # Modular knowledge base loaded on-demand
-│   ├── hqe-protocol.md          # Human-readable protocol projection
-│   ├── audit-methodology.md     # Execution lifecycle
-│   ├── evidence-standard.md     # Code snippet and evidence requirements
-│   ├── severity-confidence-effort.md # Severity gate, confidence, and effort matrix
-│   ├── health-scoring.md        # Evidence-backed 1–10 health scoring
-│   ├── change-control.md        # Change budget & anti-regression rules
-│   ├── blockers-and-unknowns.md # No-stall instrumentation guidelines
-│   ├── pre-delivery-gates.md    # Pre-delivery checklist & definition of done
-│   ├── output-controls.md       # Output caps and overflow consolidation
-│   ├── patch-packaging.md       # Unified diff patch packaging contract
-│   ├── quality-gates.md         # Engineering evaluation gates
-│   ├── reasoning-methodologies.md # 5W1H, CAGEERF, FOCUS, REACT, SCAMPER
-│   ├── security-review.md       # Security review checklist & taint chains
-│   ├── reliability-review.md    # Fault tolerance, retries, and data consistency
-│   ├── observability-review.md  # Logging, metrics, tracing, and alerts
-│   ├── performance-review.md    # Hot paths, I/O, and algorithmic efficiency
-│   ├── architecture-review.md   # Modularity, coupling, and boundaries
-│   ├── testing-review.md        # Test gap analysis & fixture realism
-│   ├── dependency-review.md     # Supply chain and dependency risks
-│   ├── ci-cd-review.md          # Pipeline security, permissions, and gates
-│   ├── documentation-review.md  # Documentation validation vs reality
-│   ├── ux-dx-review.md          # CLI ergonomics, errors, and onboarding
-│   ├── boot-startup-review.md   # Boot panics and environment initialization
-│   ├── technical-debt-review.md # Cyclomatic complexity and dead code
-│   ├── remediation.md           # Minimal-change fix engineering
-│   ├── verification.md          # Verification tiers (Tier 1/2/3)
-│   ├── large-repo-strategy.md   # Triage and coverage ledger for >50 files
-│   ├── prompt-injection-defense.md # Untrusted content defense rules
-│   ├── source-lineage.md        # Source provenance and lineage notes
-│   └── 📂 language-guides/      # Language-specific diagnostic guides (9 languages)
-│
-├── 📂 workflows/                # Phased procedural reasoning playbooks
-│   ├── full-audit.md            # End-to-end full audit workflow
-│   ├── targeted-bug-hunt.md     # Focused diagnostic workflow
-│   ├── security-audit.md        # Dedicated security audit playbook
-│   ├── architecture-audit.md    # Architecture evaluation playbook
-│   ├── performance-audit.md     # Performance audit playbook
-│   ├── dependency-audit.md      # Dependency & supply chain audit
-│   ├── ci-audit.md              # CI/CD pipeline audit
-│   ├── testing-audit.md         # Test suite & coverage audit
-│   ├── documentation-audit.md   # Documentation accuracy audit
-│   ├── remediation-run.md       # Safe remediation execution workflow
-│   ├── verification-run.md      # Verification & test proof workflow
-│   ├── regression-analysis.md   # Regression isolation workflow
-│   ├── pr-review.md             # Pull request diff analysis workflow
-│   ├── incident-response.md     # Stop-the-line incident workflow
-│   ├── debug-error.md           # Error & exception debugging playbook
-│   ├── trace-regression.md      # Multi-hop execution trace playbook
-│   └── handoff-generation.md    # Agent-to-agent task delegation workflow
-│
-├── 📂 templates/                # Markdown report and artifact templates
-│   ├── finding.md               # Standard single finding template
-│   ├── report.md                # Full audit executive report template
-│   ├── handoff.md               # Comprehensive agent handoff template
-│   ├── run-manifest.md          # Scan manifest template
-│   ├── risk-register.md         # Risk register template
-│   ├── master-todo-backlog.md   # Master TODO backlog template
-│   ├── pattern-findings.md      # Cross-cutting pattern findings template
-│   ├── quick-wins-vs-structural.md # Quick wins template
-│   ├── security-posture-summary.md # Security posture template
-│   ├── reliability-summary.md   # Reliability summary template
-│   ├── testing-gaps.md          # Testing gaps template
-│   ├── unknowns-verification.md # Blockers & unknowns template
-│   ├── confidence-declaration.md # Confidence declaration template
-│   ├── session-log.md           # Session continuity log template
-│   ├── redaction-log.md         # Redaction log template
-│   ├── patch-action.md          # Single-finding patch action template
-│   ├── remediation-plan.md      # Remediation plan template
-│   ├── validation-report.md     # Validation report template
-│   └── incident-mini-report.md  # Incident mini-report template
-│
-├── 📂 schemas/                  # Draft-07 JSON schemas for machine artifacts
-│   ├── finding.schema.json      # Single finding schema with severity gate
-│   ├── findings.schema.json     # Findings collection schema
-│   ├── run-manifest.schema.json # Run manifest schema
-│   ├── handoff.schema.json      # Agent handoff schema
-│   ├── session-log.schema.json  # Cross-run session log schema
-│   ├── redaction-log.schema.json # Redaction log schema
-│   └── report.schema.json       # Structured audit report schema
-│
-├── 📂 runtime/                  # Deterministic Python execution runtime
-│   ├── __init__.py              # Runtime package export
-│   ├── session_manager.py       # Session state machine & persistence
-│   ├── finding_registry.py      # Finding repository & lifecycle state machine
-│   ├── evidence_store.py        # Code evidence triads & tool execution logger
-│   ├── run_manifest.py          # Deterministic run manifest generator
-│   └── artifact_pipeline.py     # Canonical 9-deliverable assembly engine
-│
-├── 📂 scripts/                  # Portable Python CLI helper tools
-│   ├── check_skill.py           # Skill structure & link validator
-│   ├── detect_manifests.py      # Multi-ecosystem manifest detector (22+ ecosystems)
-│   ├── detect_test_commands.py  # Test & verification command detector
-│   ├── inventory_repo.py        # Comprehensive repository indexer & classifier
-│   ├── local_risk_scan.py       # Safe static risk scanner
-│   ├── redact_secrets.py        # Regex-based deterministic secret redactor
-│   ├── summarize_tree.py        # Subsystem tree summarizer
-│   ├── validate_findings.py     # JSON findings schema validator
-│   ├── validate_manifest.py     # Run manifest validator
-│   ├── validate_session_log.py  # Session log validator
-│   ├── validate_semantics.py    # Cross-field semantic validator
-│   ├── validate_protocol_bundle.py # Protocol bundle validator
-│   ├── build_artifacts.py       # Deterministic audit deliverable assembler
-│   ├── create_run_manifest.py   # Run manifest generator CLI
-│   ├── check_protocol_sync.py   # Protocol synchronization & checksum validator
-│   └── package_skill.py         # Release packager (zero cache/git debris)
-│
-└── 📂 tests/                    # Automated tests and acceptance fixtures
-    ├── test_runtime.py          # Runtime layer unit & state machine tests
-    ├── test_workflow_contracts.py # Workflow contract tests
-    ├── test_template_contracts.py # Template contract tests
-    ├── test_protocol_sync.py    # Protocol checksum synchronization tests
-    ├── test_structure.py        # Repository structure tests
-    ├── test_schemas.py          # JSON schema validation tests
-    ├── test_semantics.py        # Semantic invariant tests
-    ├── test_inventory.py        # Inventory classification tests
-    ├── test_manifests.py        # Ecosystem manifest tests
-    ├── test_local_risk_scan.py  # Static risk scan tests
-    ├── test_redaction.py        # Secret redaction tests
-    ├── test_links.py            # Relative markdown link integrity tests
-    ├── test_packaging.py        # Clean packaging tests
-    ├── test_protocol_contract.py # Canonical protocol contract tests
-    ├── test_protocol_skill_parity.py # Skill-to-protocol parity tests
-    ├── 📂 fixtures/             # Standard test payloads
-    └── 📂 acceptance/           # Realistic polyglot acceptance scenarios
-```
 
 ---
 
 ## 🚀 Quickstart & Installation
 
-### 1. Installation into Host AI Agent
+### 1. Installation into Host AI Agents
 
 ```bash
 # Antigravity CLI / Gemini CLI:
@@ -295,31 +169,32 @@ cp -r /path/to/Skill-HQE ~/.gemini/antigravity-cli/builtin/skills/hqe
 # Kimi Code / oh-my-kimi:
 cp -r /path/to/Skill-HQE ~/.agents/skills/hqe
 
-# Claude Code / Cursor / Windsurf:
-cp -r /path/to/Skill-HQE /your/workspace/.agents/skills/hqe
+# Claude Code / Cursor / Windsurf / Roo Code / Cline:
+mkdir -p .agents/skills
+cp -r /path/to/Skill-HQE .agents/skills/hqe
 ```
 
 ### 2. Basic Invocation Examples
 
 ```text
-# Run a full repository audit
+# Run a comprehensive repository audit:
 /HQE audit
 
-# Run a dedicated security scan
-/HQE security
+# Run a dedicated security scan on authentication:
+/HQE security src/auth/
 
-# Review uncommitted changes or incoming PR
+# Review uncommitted changes or incoming PR:
 /HQE pr-review
 
-# Remediate a verified finding with minimal diff
-/HQE remediate HQE-BUG-014
+# Remediate a verified finding with minimal safe diff:
+/HQE remediate HQE-SEC-001
 ```
 
 ---
 
-## 📊 Finding & Artifact Model
+## 📊 Finding & Deliverable Artifact Model
 
-Findings are categorized under the **HQE Finding Taxonomy**:
+Findings are categorized under the **HQE Finding Taxonomy**:  
 `HQE-(BOOT|SEC|BUG|REL|PERF|UX|DX|DOC|DEBT|DEPS)-<INDEX>`
 
 ```json
@@ -330,37 +205,135 @@ Findings are categorized under the **HQE Finding Taxonomy**:
   "severity": "HIGH",
   "confidence": "FACT",
   "status": "CONFIRMED",
-  "affected_component": "crates/hqe-core/src/auth.rs",
+  "affected_component": "src/auth/token_validator.py",
   "preconditions": ["Service deployed with unset JWT_SECRET environment variable"],
-  "exploitability": "Trivial via forged signature",
+  "exploitability": "Trivial signature forgery via known static string",
   "blast_radius": "Complete authentication bypass for all user sessions",
   "likelihood": "High",
   "likelihood_justification": "Production containers default to empty env unless injected",
-  "exposure_evidence": "auth.rs#L52 entrypoint exposed to public HTTP listener",
+  "exposure_evidence": "token_validator.py#L42 exposed to public HTTP listener",
   "evidence": [
     {
-      "path": "crates/hqe-core/src/auth.rs",
-      "start_line": 52,
-      "end_line": 56,
-      "snippet": "let secret = std::env::var(\"JWT_SECRET\").unwrap_or_else(|_| \"dev-insecure-secret\".to_string());"
+      "path": "src/auth/token_validator.py",
+      "start_line": 42,
+      "end_line": 46,
+      "snippet": "secret = os.environ.get('JWT_SECRET', 'dev-insecure-fallback-secret')"
     }
   ],
-  "observed_behavior": "Service falls back to a static dev secret when JWT_SECRET is unset.",
-  "expected_behavior": "Service must fail fast with a fatal startup error if JWT_SECRET is unset in production.",
+  "observed_behavior": "Service falls back to static dev secret when JWT_SECRET is unset.",
+  "expected_behavior": "Service must fail fast with fatal startup error if secret is unset.",
   "root_cause": "Permissive default fallback in auth initialization.",
   "impact": "Allows arbitrary authentication token forgery.",
-  "remediation": "Replace fallback with explicit error propagation.",
-  "validation": ["cargo test --package hqe-core test_auth_missing_secret_fails"],
+  "remediation": "Replace fallback with explicit startup assertion and error propagation.",
+  "validation": ["pytest tests/test_auth.py::test_missing_secret_fails_startup"],
   "effort": "S",
   "regression_risk": "Low"
 }
 ```
 
+### The 9 Canonical Deliverables:
+1. `HQE_RISK_REGISTER.md`: Consolidated risk matrix prioritized by severity and blast radius.
+2. `HQE_MASTER_TODO.md`: Sequenced engineering backlog with effort tiers (S/M/L/XL).
+3. `HQE_PATTERN_FINDINGS.md`: Cross-cutting systemic anti-patterns observed across files.
+4. `HQE_QUICK_WINS.md`: High-impact, low-effort ($S$) improvements vs structural refactors.
+5. `HQE_SECURITY_POSTURE.md`: Attack surface evaluation, trust boundaries, and taint chains.
+6. `HQE_RELIABILITY.md`: Error handling, resource lifecycles, and concurrency analysis.
+7. `HQE_TESTING_GAPS.md`: Untested edge cases, missing failure assertions, and coverage voids.
+8. `HQE_UNKNOWNS.md`: Hypotheses, unverified concerns, and instrumentation guidance.
+9. `HQE_CONFIDENCE.md`: Epistemic declaration of verified facts vs inferences.
+
 ---
 
-## 🛠️ CLI Helper Tools
+## 🏛️ Architecture & Repository Structure
 
-All helper scripts in `scripts/` are standalone, portable Python 3.10+ utilities:
+```text
+Skill-HQE/
+├── 📄 SKILL.md                  # Root skill operational contract & progressive disclosure hub
+├── 📄 README.md                 # Canonical project documentation (this file)
+├── 📄 LICENSE                   # Apache-2.0 open-source license
+├── 📄 NOTICE                    # Attribution and source lineage notice
+├── 📄 VERSION                   # Semantic version (5.0.0)
+├── 📄 CHANGELOG.md              # Semantic version changelog
+├── 📄 CONTRIBUTING.md           # Developer contribution guidelines
+├── 📄 SECURITY.md               # Vulnerability disclosure policy
+├── 📄 CODE_OF_CONDUCT.md        # Community code of conduct
+├── 📄 PRIVACY.md                # Local privacy & zero-telemetry policy
+├── 📄 TERMS_OF_SERVICE.md       # Terms of service & acceptable use
+├── 📄 pyproject.toml            # Project packaging & pytest configuration
+├── 📄 requirements-dev.txt      # Development dependencies
+│
+├── 📂 protocol/                 # Canonical HQE Protocol v5.0.0 Ground Truth
+│   ├── hqe-engineer.yaml        # Active canonical protocol YAML
+│   ├── hqe-engineer-schema.json # JSON Schema Draft 2020-12 specification
+│   ├── hqe-schema.json          # Tooling schema specification
+│   ├── validate.py              # Canonical protocol validator
+│   ├── verify.py                # Standalone verbose verifier
+│   ├── README.md                # Protocol documentation
+│   ├── VALIDATORS.md            # Validator usage guide
+│   ├── HQE_v5_MIGRATION_NOTES.md# v5.0.0 protocol upgrade notes
+│   └── SOURCE_CHECKSUMS.sha256  # Cryptographic source checksums
+│
+├── 📂 docs/                     # Canonical Engineering Documentation (Runtime / User-Facing)
+│   ├── ARCHITECTURE.md          # Architectural specification and system layering
+│   ├── USER_GUIDE.md            # Comprehensive user and operator manual
+│   ├── DEVELOPER_GUIDE.md       # Developer, extension, and release manual
+│   ├── DESIGN_DECISIONS.md      # Architectural Decision Records (ADRs)
+│   ├── SOURCE_AUDIT.md          # Lineage, provenance, and checksum audit
+│   ├── FINDING_SPECIFICATION.md # Finding taxonomy and severity rubric
+│   ├── SECURITY_MODEL.md        # Security architecture and trust boundaries
+│   └── THREAT_MODEL.md          # STRIDE threat model and risk mitigations
+│
+├── 📂 runtime/                  # Deterministic Python Execution Runtime Layer
+│   ├── __init__.py              # Package exports
+│   ├── session_manager.py       # Session lifecycle state machine & continuity logger
+│   ├── finding_registry.py      # Finding repository, deduplication & severity gate validator
+│   ├── evidence_store.py        # Evidence triad validator & secret redactor
+│   ├── run_manifest.py          # Reproducibility run manifest generator
+│   └── artifact_pipeline.py     # Canonical 9-deliverable markdown assembler
+│
+├── 📂 references/               # Modular Knowledge Base (26 reference guides + 9 language guides)
+├── 📂 workflows/                # Phased Procedural Reasoning Playbooks (21 operational workflows)
+├── 📂 templates/                # Markdown Report and Deliverable Templates (19 templates)
+├── 📂 schemas/                  # Draft-07 JSON Schemas for Machine Artifacts (7 schemas)
+├── 📂 scripts/                  # Standalone Python 3.10+ CLI Helper Utilities (17 tools)
+│
+├── 📂 development/              # Internal Maintenance Workspace (Excluded from Release)
+│   ├── README.md                # Maintenance workspace documentation
+│   ├── 📂 audits/               # Completed repository audits & hygiene reports
+│   ├── 📂 agent-handoffs/       # Multi-session agent continuation records
+│   ├── 📂 investigations/       # Research spikes & benchmark analyses
+│   ├── 📂 migration-notes/      # Workbench capability mappings & migration history
+│   ├── 📂 design-notes/         # Draft design proposals & sketches
+│   ├── 📂 benchmarks/           # Performance & token economy measurements
+│   ├── 📂 experiments/          # Prototype scripts & experimental prompts
+│   └── 📂 generated/            # Local test dumps & temporary outputs
+│
+├── 📂 archive/                  # Historical & Deprecated Material (Provenance Only)
+│   ├── README.md                # Archive documentation & non-runtime constraint
+│   ├── 📂 historical/           # Superseded protocol versions & legacy notes
+│   ├── 📂 deprecated/           # Deprecated workflows & templates
+│   └── 📂 old-releases/         # Historical release records & notes
+│
+└── 📂 tests/                    # Automated Test Suite & Acceptance Fixtures (66+ tests)
+```
+
+---
+
+## ⚙️ Deterministic Python Runtime Engine
+
+The `runtime/` package brings executable control-plane rigor to Skill-HQE without requiring compiled native binaries:
+
+- **`SessionManager`** (`runtime/session_manager.py`): State machine managing transitions from `INITIALIZED` through `ORIENTING`, `ANALYZING`, `REMEDIATING`, `VERIFYING`, and `COMPLETED`.
+- **`FindingRegistry`** (`runtime/finding_registry.py`): Invariant enforcement for finding schemas, lifecycle tracking (`CONFIRMED`, `FIXED`, `SUPERSEDED`), and strict severity gate validation.
+- **`EvidenceStore`** (`runtime/evidence_store.py`): Verification of code evidence triads (`path`, line ranges/anchors, snippets) and automated secret redaction.
+- **`RunManifestGenerator`** (`runtime/run_manifest.py`): Deterministic reproducibility logger capturing git state, tool executions, and coverage metrics.
+- **`ArtifactPipeline`** (`runtime/artifact_pipeline.py`): Deterministic assembly engine for the 9 canonical audit deliverables.
+
+---
+
+## 🛠️ CLI Helper Utilities
+
+All scripts in `scripts/` are standalone, portable Python 3.10+ utilities:
 
 ```bash
 # 1. Inventory repository files with category breakdown
@@ -382,11 +355,37 @@ All helper scripts in `scripts/` are standalone, portable Python 3.10+ utilities
 ./scripts/validate_findings.py findings.json
 ./scripts/validate_semantics.py findings.json
 
-# 7. Check internal structural integrity of Skill-HQE
+# 7. Assemble canonical audit deliverables from findings JSON
+./scripts/build_artifacts.py --findings findings.json --output-dir ./audit-output
+
+# 8. Check internal structural integrity and links of Skill-HQE
 ./scripts/check_skill.py .
 
-# 8. Package clean release bundle
-./scripts/package_skill.py --output /tmp/Skill-HQE.zip
+# 9. Package clean release bundle (zero cache/git debris)
+./scripts/package_skill.py --source . --output /tmp/Skill-HQE.zip
+```
+
+---
+
+## 🔍 Protocol Validation & CI/CD
+
+Validate the embedded canonical protocol and run the complete test suite:
+
+```bash
+# Validate protocol YAML against schema:
+python3 protocol/validate.py protocol/hqe-engineer.yaml
+
+# Validate schema structure:
+python3 protocol/validate.py --schema
+
+# Run strict protocol bundle integrity checks:
+python3 scripts/validate_protocol_bundle.py --strict-schema-metadata
+
+# Check protocol SHA-256 integrity:
+python3 scripts/check_protocol_sync.py .
+
+# Run full pytest suite (unit, schema, semantic, contract, and acceptance tests):
+pytest -v
 ```
 
 ---
@@ -395,39 +394,38 @@ All helper scripts in `scripts/` are standalone, portable Python 3.10+ utilities
 
 The HQE Skill is hardened against adversarial codebase manipulation:
 
-- 🛡️ **Untrusted Codebase Boundary**: Comments, fixtures, and documentation in audited repositories cannot instruct the agent to execute malicious commands or bypass safety rules. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) and [`references/prompt-injection-defense.md`](references/prompt-injection-defense.md).
+- 🛡️ **Untrusted Codebase Boundary**: Audited code, comments, fixtures, and docs cannot instruct the agent to execute malicious commands or bypass safety rules. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) and [`references/prompt-injection-defense.md`](references/prompt-injection-defense.md).
 - 🔑 **Automated Secret Redaction**: Credentials and tokens discovered during audits are automatically redacted (`REDACTED_<TYPE>_<COUNT>`).
-- 📁 **Working Tree Protection**: Pre-flight checks ensure uncommitted developer work is never overwritten.
+- 📁 **Working Tree Protection**: Pre-flight checks verify `git status` to ensure uncommitted work is never overwritten.
 - 🎯 **STRIDE Analysis**: Comprehensive threat matrix documented in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
-
----
-
-## 🧪 CI/CD & Verification
-
-Run the full local verification test suite:
-
-```bash
-# Run all unit, contract, semantic, and acceptance tests
-pytest -v
-
-# Verify skill completeness, schema validity, and markdown links
-./scripts/check_skill.py .
-```
 
 ---
 
 ## 📚 Canonical Documentation
 
-- 📐 [**Architecture Specification**](docs/ARCHITECTURE.md)
-- 🗺️ [**Capability Mapping Document**](docs/CAPABILITY_MAPPING.md)
-- 🔄 [**Migration from HQE-Workbench**](docs/MIGRATION_FROM_HQE_WORKBENCH.md)
-- 💡 [**Design Decisions (ADRs)**](docs/DESIGN_DECISIONS.md)
-- 🔍 [**Source Audit & Checksums**](docs/SOURCE_AUDIT.md)
-- 📖 [**User Guide & Manual**](docs/USER_GUIDE.md)
-- 🛠️ [**Developer & Extension Guide**](docs/DEVELOPER_GUIDE.md)
-- 🏷️ [**Finding Specification & Taxonomy**](docs/FINDING_SPECIFICATION.md)
-- 🛡️ [**Security Model**](docs/SECURITY_MODEL.md)
-- 🎯 [**STRIDE Threat Model**](docs/THREAT_MODEL.md)
+### Runtime & Core Architecture
+- 📐 [**Architecture Specification**](docs/ARCHITECTURE.md) — System layering and component specifications
+- 📖 [**User Guide & Operating Manual**](docs/USER_GUIDE.md) — Comprehensive operator manual for all 17 modes
+- 🛠️ [**Developer & Extension Guide**](docs/DEVELOPER_GUIDE.md) — Extension, testing, and release manual
+- 💡 [**Design Decisions (ADRs)**](docs/DESIGN_DECISIONS.md) — Architectural Decision Records
+- 🔍 [**Source Audit & Checksums**](docs/SOURCE_AUDIT.md) — Lineage, provenance, and SHA-256 audit
+- 🏷️ [**Finding Specification & Taxonomy**](docs/FINDING_SPECIFICATION.md) — Finding taxonomy and severity rubric
+- 🛡️ [**Security Model**](docs/SECURITY_MODEL.md) — Security boundaries and isolation architecture
+- 🎯 [**STRIDE Threat Model**](docs/THREAT_MODEL.md) — Threat modeling and attack mitigations
+
+### Internal Maintenance & Provenance
+- 🛠️ [**Development Workspace**](development/README.md) — Internal audits, benchmark data, and maintainer notes
+- 📜 [**Capability Mapping & Migration**](development/migration-notes/CAPABILITY_MAPPING.md) — Source-to-skill capability mapping audit
+- 🏛️ [**Historical Archive**](archive/README.md) — Obsolete protocol versions and legacy references
+
+---
+
+## 🤝 Development & Contribution Process
+
+We welcome contributions! Please review our standard community guidelines:
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Development setup, branch strategy, and PR requirements.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)**: Contributor Covenant v2.1 community standards.
+- **[SECURITY.md](SECURITY.md)**: Vulnerability disclosure guidelines and reporting contacts.
 
 ---
 
@@ -437,9 +435,6 @@ pytest -v
 - **Notice & Lineage**: See [NOTICE](NOTICE) for copyright and attribution.
 - **Terms of Service**: Governed by the [Terms of Service & Acceptable Use Policy](TERMS_OF_SERVICE.md).
 - **Privacy Policy**: Read our [Local Data Handling Policy](PRIVACY.md).
-- **Vulnerability Disclosure**: Read [SECURITY.md](SECURITY.md) for reporting guidelines.
-- **Code of Conduct**: Governed by the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
-- **Contributions**: Follow our [Contribution Guide](CONTRIBUTING.md).
 
 <div align="center">
   <sub>Built for the next generation of autonomous, reliable, and secure AI software engineering.</sub>

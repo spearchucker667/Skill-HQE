@@ -17,6 +17,11 @@ REQUIRED_FILES = [
     "NOTICE",
     "VERSION",
     "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "PRIVACY.md",
+    "TERMS_OF_SERVICE.md",
     "pyproject.toml",
     "requirements-dev.txt",
     # Protocol
@@ -133,6 +138,7 @@ REQUIRED_FILES = [
     "scripts/create_run_manifest.py",
     "scripts/check_protocol_sync.py",
     "scripts/package_skill.py",
+    "scripts/check_release_contents.py",
     "scripts/check_skill.py",
     # Docs
     "docs/ARCHITECTURE.md",
@@ -141,10 +147,11 @@ REQUIRED_FILES = [
     "docs/FINDING_SPECIFICATION.md",
     "docs/USER_GUIDE.md",
     "docs/DEVELOPER_GUIDE.md",
-    "docs/CAPABILITY_MAPPING.md",
-    "docs/MIGRATION_FROM_HQE_WORKBENCH.md",
     "docs/DESIGN_DECISIONS.md",
     "docs/SOURCE_AUDIT.md",
+    # Development & Archive
+    "development/README.md",
+    "archive/README.md",
 ]
 
 REQUIRED_SKILL_TERMS = [
@@ -208,9 +215,8 @@ def check_skill(root_path: Path) -> list[str]:
 
     # 4. Markdown Relative Link Verification
     for md_file in root.rglob("*.md"):
-        # Skip package subfolder or git
         rel_str = str(md_file.relative_to(root))
-        if "HQE_PROTOCOL_SKILL_EMBED_PACKAGE" in rel_str or ".git" in rel_str:
+        if ".git" in rel_str or ".pytest_cache" in rel_str:
             continue
 
         try:
@@ -229,7 +235,7 @@ def check_skill(root_path: Path) -> list[str]:
     # 5. Python Syntax Compilation
     for py_file in root.rglob("*.py"):
         rel_str = str(py_file.relative_to(root))
-        if "HQE_PROTOCOL_SKILL_EMBED_PACKAGE" in rel_str or ".git" in rel_str:
+        if ".git" in rel_str or ".pytest_cache" in rel_str:
             continue
         try:
             py_compile.compile(str(py_file), doraise=True)
@@ -244,11 +250,8 @@ def check_skill(root_path: Path) -> list[str]:
         "docs/SOURCE_AUDIT.md",
         "docs/CAPABILITY_MAPPING.md",
         "docs/DESIGN_DECISIONS.md",
-        "HQE_SKILL_PARITY_REPAIR_AGENT_HANDOFF.md",
-        "HQE_SKILL_AGENT_HANDOFF.md",
-        "HQE_SKILL_CONVERSION_PROMPT.md",
-        "START_AGENT_PROMPT.md",
-        "PROTOCOL_EMBEDDING_AGENT_HANDOFF.md",
+        "docs/REPOSITORY_AUDIT.md",
+        "docs/REPOSITORY_HYGIENE_REPORT.md",
         "scripts/check_skill.py"
     }
 
@@ -256,7 +259,7 @@ def check_skill(root_path: Path) -> list[str]:
         if not text_file.is_file():
             continue
         rel_str = str(text_file.relative_to(root))
-        if any(skip in rel_str for skip in ("HQE_PROTOCOL_SKILL_EMBED_PACKAGE", ".git", ".pytest_cache", "tests/fixtures", "__pycache__")):
+        if any(skip in rel_str for skip in (".git", ".pytest_cache", "tests/fixtures", "__pycache__")):
             continue
         if rel_str in allowed_leak_files:
             continue

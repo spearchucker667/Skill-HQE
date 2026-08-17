@@ -78,4 +78,4 @@ Do not ingest all reference files at once. Load specific references based on the
 - **Remediation, Change Control & Verification**: `references/remediation.md`, `references/change-control.md`, `references/patch-packaging.md`, `references/verification.md`
 - **Large Codebase Strategy (>50 files)**: `references/large-repo-strategy.md`, `references/repository-orientation.md`
 - **Language Diagnostics**: `references/language-guides/` (`rust.md`, `python.md`, `go.md`, `typescript-javascript.md`, `csharp.md`, `dart.md`, `javascript.md`, `html-css.md`, `general.md`)
-- **Source Lineage & Provenance**: `references/source-lineage.md`, `docs/SOURCE_AUDIT.md`, `docs/MIGRATION_FROM_HQE_WORKBENCH.md`
+- **Source Lineage & Provenance**: `references/source-lineage.md`, `docs/SOURCE_AUDIT.md`, `development/migration-notes/MIGRATION_FROM_HQE_WORKBENCH.md`

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Clean packaging script for Skill-HQE release bundles.
 
-Builds a deterministic ZIP archive of Skill-HQE, strictly excluding git metadata,
-cache debris (__pycache__, *.pyc), macOS metadata (.DS_Store, __MACOSX), and temporary files.
+Builds a deterministic ZIP archive of Skill-HQE containing only approved runtime
+and documentation files, strictly excluding development directories (development/, archive/, tests/),
+git metadata, cache debris (__pycache__, *.pyc), macOS metadata (.DS_Store, __MACOSX),
+and temporary/generated files.
 """
 
 from __future__ import annotations
@@ -14,27 +16,58 @@ import sys
 import zipfile
 from pathlib import Path
 
+# Directories excluded from release archives
+EXCLUDED_DIRECTORIES = {
+    ".git",
+    ".github",
+    "__MACOSX",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "development",
+    "archive",
+    "tests",  # Test fixtures and tests are development assets
+    "audit-output",
+    "generated",
+}
+
+# Specific files excluded from release archives
+EXCLUDED_FILES = {
+    ".gitignore",
+    ".gitattributes",
+}
+
+# Forbidden file patterns excluded from release archives
 FORBIDDEN_PATTERNS = [
-    ".git", ".git/*",
-    "__MACOSX", "__MACOSX/*", "*/__MACOSX/*",
-    "__pycache__", "*__pycache__*", "*/__pycache__/*",
-    "*.pyc", "*.pyo", "*.pyd",
-    ".DS_Store", "*/.DS_Store",
-    ".pytest_cache", ".pytest_cache/*",
-    "*.zip", "*.tar.gz", "*.tgz",
-    "HQE_PROTOCOL_SKILL_EMBED_PACKAGE", "HQE_PROTOCOL_SKILL_EMBED_PACKAGE/*",
-    "protocolupdate", "protocolupdate/*"
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    "*.log",
+    "*.zip",
+    "*.tar.gz",
+    "*.tgz",
+    ".DS_Store",
+    "Thumbs.db",
+    ".env",
+    "*.secret",
+    "*.key",
+    "*.pem",
+    "*__pycache__*",
 ]
 
 
 def should_exclude(rel_path: str) -> bool:
-    """Check if relative path matches forbidden archive patterns."""
+    """Check if relative path matches excluded directory or pattern."""
     normalized = rel_path.replace("\\", "/")
     parts = normalized.split("/")
 
     for part in parts:
-        if part in {".git", "__MACOSX", "__pycache__", ".pytest_cache", ".DS_Store", "HQE_PROTOCOL_SKILL_EMBED_PACKAGE", "protocolupdate"}:
+        if part in EXCLUDED_DIRECTORIES:
             return True
+
+    if normalized in EXCLUDED_FILES or os.path.basename(normalized) in EXCLUDED_FILES:
+        return True
 
     for pat in FORBIDDEN_PATTERNS:
         if fnmatch.fnmatch(normalized, pat) or fnmatch.fnmatch(os.path.basename(normalized), pat):
@@ -44,7 +77,7 @@ def should_exclude(rel_path: str) -> bool:
 
 
 def package_skill(source_dir: Path, output_zip: Path) -> dict:
-    """Package skill directory into a clean zip archive."""
+    """Package skill directory into a clean release zip archive."""
     src = source_dir.resolve()
     out = output_zip.resolve()
 
@@ -62,8 +95,8 @@ def package_skill(source_dir: Path, output_zip: Path) -> dict:
             rel_dir = Path(current_root).relative_to(src)
             rel_dir_str = "" if str(rel_dir) == "." else str(rel_dir).replace("\\", "/") + "/"
 
-            # Prune forbidden directories early
-            dirs[:] = [d for d in dirs if not should_exclude(f"{rel_dir_str}{d}")]
+            # Prune excluded directories early
+            dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRECTORIES and not should_exclude(f"{rel_dir_str}{d}")]
 
             for f in sorted(files):
                 rel_file = f"{rel_dir_str}{f}"
@@ -76,17 +109,17 @@ def package_skill(source_dir: Path, output_zip: Path) -> dict:
                 zf.write(abs_file, arcname=archive_name)
                 packaged_files.append(archive_name)
 
-    # Verification pass over generated archive
-    with zipfile.ZipFile(out, "r") as zf:
-        for name in zf.namelist():
-            parts = name.split("/")
-            for part in parts:
-                if part in {".git", "__MACOSX", "__pycache__", ".DS_Store"}:
-                    out.unlink()
-                    raise RuntimeError(f"Archive verification failed: forbidden directory '{part}' found in '{name}'")
-            if name.endswith(".pyc") or name.endswith(".pyo"):
-                out.unlink()
-                raise RuntimeError(f"Archive verification failed: compiled python file found in '{name}'")
+    # Post-packaging validation check
+    try:
+        from scripts.check_release_contents import check_zip_archive
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from check_release_contents import check_zip_archive
+
+    errors = check_zip_archive(out)
+    if errors:
+        out.unlink()
+        raise RuntimeError(f"Release contents validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
 
     return {
         "output_path": str(out),
@@ -98,18 +131,21 @@ def package_skill(source_dir: Path, output_zip: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Package Skill-HQE into a clean release ZIP.")
-    parser.add_argument("--source", default=".", help="Skill-HQE root path (default: .)")
-    parser.add_argument("--output", default="Skill-HQE-v5.0.0.zip", help="Output ZIP path")
+    parser.add_argument("--source", "-s", default=".", help="Source directory (default: current directory)")
+    parser.add_argument("--output", "-o", required=True, help="Output ZIP file path")
     args = parser.parse_args()
 
+    src_path = Path(args.source)
+    out_path = Path(args.output)
+
     try:
-        res = package_skill(Path(args.source), Path(args.output))
+        res = package_skill(src_path, out_path)
         print(f"Skill successfully packaged: {res['output_path']} ({res['total_files_packaged']} files, {res['size_bytes']} bytes)")
         return 0
     except Exception as exc:
-        print(f"Packaging ERROR: {exc}", file=sys.stderr)
+        print(f"Packaging failed: {exc}", file=sys.stderr)
         return 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

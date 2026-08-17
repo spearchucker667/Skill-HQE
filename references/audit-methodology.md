@@ -1,6 +1,6 @@
 # HQE Audit Methodology
 
-**Protocol Version**: HQE Protocol v4.2.1
+**Protocol Version**: HQE Protocol v5.0.0
 
 The HQE audit methodology is designed to replace superficial pattern matching with deep, evidence-based systems engineering.
 

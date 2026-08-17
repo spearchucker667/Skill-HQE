@@ -1,7 +1,7 @@
 # Security Model & Trust Boundaries
 
 **Status**: Canonical Security Architecture  
-**Protocol Version**: HQE Protocol v4.2.1
+**Protocol Version**: HQE Protocol v5.0.0
 
 ---
 

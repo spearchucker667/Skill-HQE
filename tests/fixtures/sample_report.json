@@ -1,6 +1,6 @@
 {
   "run_id": "hqe-run-20260817-001",
-  "protocol_version": "4.2.1",
+  "protocol_version": "5.0.0",
   "timestamp": "2026-08-17T08:00:00Z",
   "repository": {
     "name": "sample-service",

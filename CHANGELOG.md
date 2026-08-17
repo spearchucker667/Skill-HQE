@@ -11,9 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Unified HQE Control-Plane v5.0.0**: Upgraded protocol engine to HQE Engineer Protocol v5.0.0 (`protocol/hqe-engineer.yaml`), JSON Schema Draft 2020-12 (`protocol/hqe-engineer-schema.json`), and validator suite (`protocol/validate.py`, `protocol/verify.py`).
-- **Control Plane Enforcement**: Fully consolidated health scoring, severity gates with likelihood/exposure models, trust-boundary analysis, security taint tracking, change budgets ($\le 5$ files), behavior-change detection (`[BEHAVIOR CHANGE]`), anti-regression enforcement, stop-the-line incident handling, no-stall blocker instrumentation, and reproducibility manifests.
-- **Finding Lifecycle & Artifact Taxonomy**: Added finding lifecycle states (`CONFIRMED`, `STRONGLY_SUPPORTED`, `SUSPECTED`, `NOT_REPRODUCED`, `FIXED`, `REOPENED`, `SUPERSEDED`) and canonical artifact taxonomy across all 9 audit deliverables.
-- **Dynamic Schema Validation**: Upgraded schema validation tooling to automatically support JSON Schema Draft 2020-12.
+- **Deterministic Python Runtime Layer (`runtime/`)**:
+  - `runtime/session_manager.py`: State machine enforcing session lifecycles and persistence (`HQE_SESSION_LOG.json`).
+  - `runtime/finding_registry.py`: Invariant enforcement, finding deduplication, lifecycle transitions (`CONFIRMED`, `FIXED`, `SUPERSEDED`), and severity gate validation.
+  - `runtime/evidence_store.py`: Code evidence triad verification (`path`, line ranges/anchors, snippet) and automated deterministic secret redaction.
+  - `runtime/run_manifest.py`: Reproducibility run manifest generator capturing environment and coverage metrics.
+  - `runtime/artifact_pipeline.py`: Deterministic assembly engine for the 9 canonical audit deliverables.
+- **Protocol Synchronization Tooling**: Added `scripts/check_protocol_sync.py` and `tests/test_protocol_sync.py` to continuously enforce protocol checksum stability.
+- **Workflow & Template Contracts**: Added `tests/test_workflow_contracts.py` and `tests/test_template_contracts.py` verifying structural compliance of all 21 workflows and 19 templates.
+- **Comprehensive Documentation Modernization**:
+  - Rewrote `README.md` to answer "What happens when you run /HQE" and document all 17 operational modes.
+  - Rewrote `docs/USER_GUIDE.md` and `docs/DEVELOPER_GUIDE.md` into exhaustive operator and extension manuals.
+  - Rewrote `docs/ARCHITECTURE.md` with updated system layers, sequence diagrams, and runtime state machines.
+  - Added ADR-006 to `docs/DESIGN_DECISIONS.md`.
+  - Created `docs/REPOSITORY_AUDIT.md` and `docs/REPOSITORY_HYGIENE_REPORT.md`.
+
+### Changed
+- Cleaned up transient agent handoff prompts and staging directories (`HQE_SKILL_AGENT_HANDOFF.md`, `HQE_SKILL_CONVERSION_PROMPT.md`, `HQE_SKILL_PARITY_REPAIR_AGENT_HANDOFF.md`, `HQE_PROTOCOL_SKILL_EMBED_PACKAGE/`).
+- Enforced strict `.gitignore` rules against `__pycache__`, `*.pyc`, and `.pytest_cache`.
+- Added CI `git clean validation` quality gate in `.github/workflows/ci.yml`.
+- Standardized all documentation headers and fixtures to HQE Protocol v5.0.0.
+
 
 ## [4.2.1] - 2026-08-17
 

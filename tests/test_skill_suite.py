@@ -32,7 +32,7 @@ class TestHQESkillSuite(unittest.TestCase):
             "docs/USER_GUIDE.md",
             "docs/DEVELOPER_GUIDE.md",
             "docs/FINDING_SPECIFICATION.md",
-            "docs/CAPABILITY_MAPPING.md",
+            "development/migration-notes/CAPABILITY_MAPPING.md",
             "schemas/finding.schema.json",
             "schemas/findings.schema.json",
             "schemas/run-manifest.schema.json",

@@ -695,6 +695,39 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local runtime state & generated audit reports
+.hqe/
+.hqe-cache/
+.hqe-state/
+audit-output/
+HQE_REPORT.md
+HQE_FINDINGS.json
+HQE_RUN_MANIFEST.json
+HQE_SESSION_LOG.json
+HQE_REDACTION_LOG.json
+HQE_RISK_REGISTER.md
+HQE_MASTER_TODO.md
+HQE_SECURITY_POSTURE.md
+HQE_RELIABILITY.md
+HQE_HANDOFF.md
+
+# Development generated scratchpads
+development/generated/*
+!development/generated/.gitkeep
+
+# Temporary and backup files
+*.tmp
+*.bak
+*.old
+*.log
+
+# Release archives
+*.zip
+*.tar.gz
+*.tgz
 
 # =============================================================================
 # End Skill-HQE .gitignore

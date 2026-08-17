@@ -1,6 +1,6 @@
 # HQE Finding & Artifact Specification
 
-**Protocol Version**: HQE Protocol v4.2.1  
+**Protocol Version**: HQE Protocol v5.0.0  
 **Schema Definition**: `schemas/finding.schema.json`
 
 ---

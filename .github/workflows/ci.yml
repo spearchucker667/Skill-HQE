@@ -45,3 +45,11 @@ jobs:
           python scripts/validate_semantics.py tests/fixtures/sample_finding_valid.json
           python scripts/validate_manifest.py tests/fixtures/sample_manifest.json
           python scripts/validate_session_log.py tests/fixtures/sample_session_log.json
+
+      - name: Git Clean Validation
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Repository is dirty or contains untracked files after CI execution."
+            git status
+            exit 1
+          fi

@@ -10,7 +10,7 @@ def test_all_markdown_relative_links_valid():
     broken = []
     for md_file in ROOT.rglob("*.md"):
         rel_str = str(md_file.relative_to(ROOT))
-        if any(skip in rel_str for skip in ("HQE_PROTOCOL_SKILL_EMBED_PACKAGE", ".git")):
+        if any(skip in rel_str for skip in (".git", ".pytest_cache")):
             continue
 
         try:

@@ -41,9 +41,17 @@ This document records the architectural decisions, trade-offs, and rationale gui
 
 ---
 
-## 5. ADR-005: Schema Metadata Reconciliation to v4.2.1
+## 5. ADR-005: Schema Metadata Reconciliation
+- **Status:** Superseded by ADR-006
+- **Decision:** Updated schema metadata to align with active protocol versions.
+
+---
+
+## 6. ADR-006: Protocol v5.0.0 Upgrade & Deterministic Python Runtime Layer
 - **Status:** Accepted
-- **Decision:** Update `$id` in `protocol/hqe-engineer-schema.json` from `...-v4.0.0.json` to `https://hqe.dev/schemas/hqe-engineer-v4.2.1.json` and title to `HQE Engineer Protocol v4.2.1 Schema`.
+- **Decision:** Upgrade canonical protocol to **HQE Engineer Protocol v5.0.0** (JSON Schema Draft 2020-12) and implement a pure-Python deterministic control-plane runtime layer (`runtime/` package) comprising `session_manager.py`, `finding_registry.py`, `evidence_store.py`, `run_manifest.py`, and `artifact_pipeline.py`.
 - **Rationale:**
-  - Exhaustive search of both repositories confirmed no external software consumers or URI resolvers depend on the stale `v4.0.0` or `v4.2.0` string literals.
-  - Eliminates schema validation warnings during strict semver audits while leaving structural validation rules identical.
+  - Standardizes the 1–10 health scoring system, severity gates, taint chains, change budget (<=5 files), anti-regression rules, stop-the-line incident handling, and no-stall blocker instrumentation.
+  - Replaces instructional-only agent guidance with deterministic, verifiable state machines for finding lifecycles, session persistence, evidence collection, and automated assembly of all 9 canonical audit deliverables.
+  - Preserves 100% host portability without compiling Rust binaries while enforcing control-plane behavior.
+
