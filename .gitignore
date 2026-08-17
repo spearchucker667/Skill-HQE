@@ -623,6 +623,7 @@ sbom.cdx.json
 .agent-cache/
 .agent-state/
 .agent-tmp/
+/.freebuff
 
 # Do NOT ignore repository-level agent instructions/configuration by accident.
 !.github/
