@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import os
-import py_compile
 import re
 import sys
 from pathlib import Path
@@ -114,6 +113,10 @@ REQUIRED_FILES = [
     "schemas/handoff.schema.json",
     "schemas/session-log.schema.json",
     "schemas/redaction-log.schema.json",
+    "schemas/patch-action.schema.json",
+    "schemas/patch-actions.schema.json",
+    "schemas/remediation-plan.schema.json",
+    "schemas/validation-report.schema.json",
     "schemas/report.schema.json",
     # Runtime
     "runtime/__init__.py",
@@ -149,6 +152,7 @@ REQUIRED_FILES = [
     "docs/DEVELOPER_GUIDE.md",
     "docs/DESIGN_DECISIONS.md",
     "docs/SOURCE_AUDIT.md",
+    "docs/artifact-format.md",
     # Development & Archive
     "development/README.md",
     "archive/README.md",
@@ -233,13 +237,16 @@ def check_skill(root_path: Path) -> list[str]:
             errors.append(f"Error reading {rel_str}: {exc}")
 
     # 5. Python Syntax Compilation
+    # Use compile() directly to avoid writing __pycache__ bytecode into the
+    # repository when the script is run locally or in CI.
     for py_file in root.rglob("*.py"):
         rel_str = str(py_file.relative_to(root))
         if ".git" in rel_str or ".pytest_cache" in rel_str:
             continue
         try:
-            py_compile.compile(str(py_file), doraise=True)
-        except py_compile.PyCompileError as exc:
+            source = py_file.read_text(encoding="utf-8", errors="replace")
+            compile(source, str(py_file), "exec")
+        except SyntaxError as exc:
             errors.append(f"Python syntax error in {rel_str}: {exc}")
 
     # 6. Check for Forbidden Source Path Leaks (outside migration/lineage docs)

@@ -513,6 +513,9 @@ HQE_VALIDATION.md
 HQE_HANDOFF.md
 LIVE_PARITY_AUDIT_2026-08-17.md
 2026-08-17-hqe-live-repository-parity-audit-remediation.md
+development/agent-handoffs/HQE_SKILL_V5_LATEST_UPDATE_BUGHUNT_HANDOFF.md
+development/agent-handoffs/REVIEW_SNAPSHOT.md
+development/agent-handoffs/START_AGENT_PROMPT.md
 
 # Generated artifact/output directories
 artifacts/

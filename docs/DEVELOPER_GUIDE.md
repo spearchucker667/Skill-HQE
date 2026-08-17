@@ -86,13 +86,12 @@ finding = registry.register({
 Generates structured `HQE_RUN_MANIFEST.json` capturing git commit hash, repository dirty status, tool executions, files reviewed, and finding counts.
 
 ### 2.5 `artifact_pipeline.py` (Canonical Deliverable Assembly)
-Assembles all 9 canonical markdown deliverables from registered findings and verification results:
+Assembles all canonical markdown deliverables and their JSON schema companions from registered findings and verification results. See [`docs/artifact-format.md`](artifact-format.md) for the full layout and schema contracts.
 ```python
 from runtime import ArtifactPipeline
 
-pipeline = ArtifactPipeline(findings=registry.all_findings(), session=sm.to_dict())
-deliverables = pipeline.build_all_deliverables()
-pipeline.write_to_directory("./audit-output")
+pipeline = ArtifactPipeline(registry, session=sm, repo_name="target-repo")
+artifacts = pipeline.build_all_artifacts(output_dir="./audit-output")
 ```
 
 ---
@@ -135,8 +134,9 @@ All machine-readable schemas reside in `schemas/` and must adhere to **JSON Sche
 1. Edit schema in `schemas/<name>.schema.json`.
 2. Update corresponding sample fixtures in `tests/fixtures/`.
 3. Update corresponding markdown template in `templates/<name>.md`.
-4. Run `pytest tests/test_schemas.py` and `pytest tests/test_template_contracts.py`.
+4. Run `pytest tests/test_schemas.py`, `pytest tests/test_template_contracts.py`, and `pytest tests/test_artifact_schemas.py`.
 5. Update `docs/FINDING_SPECIFICATION.md` if finding schemas change.
+6. Update `docs/artifact-format.md` if artifact layout or schema contracts change.
 
 ---
 
@@ -158,7 +158,7 @@ Before committing any changes, run the full validation suite:
 # 1. Compile all Python scripts, tests, and runtime modules
 python3 -m compileall -q scripts tests runtime
 
-# 2. Run complete pytest test suite (66+ tests)
+# 2. Run complete pytest test suite
 pytest -v
 
 # 3. Validate protocol YAML against schema

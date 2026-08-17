@@ -2,19 +2,58 @@
 
 from __future__ import annotations
 
+import datetime
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from .finding_registry import FindingRegistry, Finding
+from .redaction_engine import TypedRedactionEngine
 from .session_manager import SessionManager
+
+_PROTOCOL_YAML = Path(__file__).resolve().parents[1] / "protocol" / "hqe-engineer.yaml"
+
+
+def _derive_protocol_version() -> str:
+    """Read the canonical protocol version from the HQE protocol YAML."""
+    try:
+        data = yaml.safe_load(_PROTOCOL_YAML.read_text(encoding="utf-8"))
+        version = data.get("protocol_version") or data.get("schema_version")
+        if version:
+            return str(version)
+    except Exception:
+        pass
+    return "5.0.0"
+
+
+def _score_to_report_band(score: int | None) -> str:
+    """Map internal health score band to report.schema.json enum values."""
+    if score is None or score >= 9:
+        return "Production-ready"
+    if score >= 7:
+        return "Solid"
+    if score >= 5:
+        return "Fragile"
+    if score >= 3:
+        return "Unstable"
+    return "Broken"
 
 
 class ArtifactPipeline:
-    def __init__(self, registry: FindingRegistry, session: SessionManager | None = None, repo_name: str = "repository"):
+    def __init__(
+        self,
+        registry: FindingRegistry,
+        session: SessionManager | None = None,
+        repo_name: str = "repository",
+        redaction_engine: TypedRedactionEngine | None = None,
+    ):
         self.registry = registry
         self.session = session
         self.repo_name = repo_name
+        self.redaction_engine = redaction_engine
 
     def generate_risk_register(self) -> str:
         """Assemble canonical Risk Register deliverable."""
@@ -43,7 +82,19 @@ class ArtifactPipeline:
             "| :--- | :--- | :--- | :--- | :--- | :--- |"
         ]
         priority = 1
-        for f in sorted(self.registry.findings.values(), key=lambda x: (x.effort != "S", x.severity != "CRITICAL")):
+        # Priority: severity > confidence > effort.  Higher-severity, more-certain,
+        # smaller-effort items are addressed first.
+        severity_rank = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+        confidence_rank = {"FACT": 0, "INFERENCE": 1, "HYPOTHESIS": 2, "NEEDS_VERIFICATION": 3}
+        effort_rank = {"S": 0, "M": 1, "L": 2}
+        for f in sorted(
+            self.registry.findings.values(),
+            key=lambda x: (
+                severity_rank.get(x.severity, 5),
+                confidence_rank.get(x.confidence, 4),
+                effort_rank.get(x.effort, 3),
+            ),
+        ):
             lines.append(f"| P{priority} | {f.id} | {f.title} | {f.effort} | {f.regression_risk} | `{f.affected_component}` |")
             priority += 1
         return "\n".join(lines) + "\n"
@@ -61,11 +112,15 @@ class ArtifactPipeline:
             by_cat.setdefault(f.category, []).append(f)
 
         for cat, items in sorted(by_cat.items()):
-            if len(items) >= 1:
+            # A pattern group requires at least two related occurrences; a single
+            # finding is an isolated issue, not a systematic pattern.
+            if len(items) >= 2:
                 lines.append(f"### {cat} Pattern Group ({len(items)} findings)")
                 for item in items:
                     lines.append(f"- **{item.id}** ({item.severity}): {item.title} (`{item.affected_component}`)")
                 lines.append("")
+        if len(lines) == 4:
+            lines.append("*(No systematic patterns with two or more occurrences identified)*")
         return "\n".join(lines) + "\n"
 
     def generate_quick_wins_vs_structural(self) -> str:
@@ -115,7 +170,8 @@ class ArtifactPipeline:
             lines.append(f"- **Remediation:** {f.remediation}")
             lines.append("")
         if not sec_findings:
-            lines.append("No active security vulnerabilities detected.")
+            lines.append("No active security findings recorded in this audit.")
+            lines.append("This is not a guarantee of complete security coverage.")
         return "\n".join(lines) + "\n"
 
     def generate_reliability_summary(self) -> str:
@@ -162,7 +218,8 @@ class ArtifactPipeline:
             lines.append(f"  - Component: `{u.affected_component}`")
             lines.append(f"  - Verification Need: {u.reproduction or 'Requires sandbox run'}")
         if not unknowns:
-            lines.append("*(All findings verified as FACT or INFERENCE; zero unverified hypotheses)*")
+            lines.append("*(No unverified hypotheses recorded in this audit.)*")
+            lines.append("Absence of recorded unknowns does not imply complete certainty.")
         return "\n".join(lines) + "\n"
 
     def generate_confidence_declaration(self) -> str:
@@ -321,9 +378,247 @@ class ArtifactPipeline:
             if f.validation:
                 cmds = "; ".join(f.validation)
                 lines.append(
-                    f"| {f.id} | PENDING | `{cmds}` | Fix verified | (run commands) | {f.confidence} |"
+                    f"| {f.id} | NOT_VERIFIED | `{cmds}` | Fix verified | (run commands) | {f.confidence} |"
                 )
         return "\n".join(lines) + "\n"
+
+    def generate_redaction_log(self) -> str:
+        """Assemble Redaction Log deliverable."""
+        data = self._build_redaction_log_data()
+        lines = [
+            f"# Redaction Log: {self.repo_name}",
+            "",
+            f"**Run ID:** {data['run_id']}",
+            f"**Timestamp:** {data['timestamp']}",
+            f"**Total Redactions:** {data['total_redactions']}",
+            f"**Files Scanned:** {data.get('files_scanned', 0)}",
+            "",
+            "## Redactions by Type",
+            ""
+        ]
+        if data["by_type"]:
+            for secret_type, count in sorted(data["by_type"].items()):
+                lines.append(f"- **{secret_type}**: {count}")
+        else:
+            lines.append("*(No secrets redacted during this audit)*")
+
+        lines.extend(["", "## Detailed Redactions", ""])
+        redactions = data.get("redactions", [])
+        if redactions:
+            lines.append("| File | Line | Secret Type | Replacement |")
+            lines.append("| :--- | :--- | :--- | :--- |")
+            for r in redactions:
+                line = r.get("line", "N/A")
+                lines.append(f"| {r['file']} | {line} | {r['secret_type']} | {r['replacement']} |")
+        else:
+            lines.append("*(No detailed redaction records)*")
+
+        return "\n".join(lines) + "\n"
+
+    def _build_redaction_log_data(self) -> dict[str, Any]:
+        """Build redaction log payload matching redaction-log.schema.json.
+
+        The timestamp is derived from the session when available so that repeated
+        artifact generation with the same session is deterministic. Without a
+        session a stable placeholder is used.
+        """
+        run_id = self.session.session_id if self.session else "hqe-redaction-run"
+        timestamp = self.session.started_at if self.session else "1970-01-01T00:00:00Z"
+        if self.redaction_engine:
+            summary = self.redaction_engine.typed_summary()
+            redactions: list[dict[str, Any]] = []
+            for entry in summary.get("typed_entries", []):
+                redactions.append({
+                    "file": entry["file"],
+                    "secret_type": entry["secret_type"],
+                    "replacement": entry["replacement"]
+                })
+            return {
+                "run_id": run_id,
+                "timestamp": timestamp,
+                "total_redactions": summary["total_redactions"],
+                "by_type": summary["by_type"],
+                "files_scanned": 0,
+                "redactions": redactions
+            }
+        return {
+            "run_id": run_id,
+            "timestamp": timestamp,
+            "total_redactions": 0,
+            "by_type": {},
+            "files_scanned": 0,
+            "redactions": []
+        }
+
+    def generate_patch_actions_json(self) -> dict[str, Any]:
+        """Return JSON Patch Actions payload matching patch-actions.schema.json."""
+        actions = []
+        for f in sorted(self.registry.findings.values(), key=lambda x: x.id):
+            actions.append({
+                "finding_id": f.id,
+                "files": [f.affected_component],
+                "exact_intended_change": f.remediation,
+                "patch": "",
+                "validation": list(f.validation),
+                "expected_result": "Finding transitions to FIXED; no regressions.",
+                "rollback": [f"Revert changes for {f.id} and re-run validation."]
+            })
+        return {"patch_actions": actions}
+
+    def generate_remediation_plan_json(self) -> dict[str, Any]:
+        """Return JSON Remediation Plan payload matching remediation-plan.schema.json."""
+        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        phases = [
+            {
+                "phase": "Containment / Safety",
+                "objective": "Stop exploitation paths and prevent regression.",
+                "actions": ["Address all CRITICAL findings", "Add regression tests for HIGH findings"],
+                "exit_criteria": ["No CRITICAL findings remain OPEN", "CI passes"]
+            },
+            {
+                "phase": "Minimal Fixes",
+                "objective": "Resolve HIGH/MEDIUM findings with smallest safe change.",
+                "actions": ["Apply patch actions"],
+                "exit_criteria": ["All HIGH findings transition to FIXED or DEFERRED"]
+            },
+            {
+                "phase": "Verification",
+                "objective": "Prove fixes work and no regressions introduced.",
+                "actions": ["Run validation commands from each finding"],
+                "exit_criteria": ["All validation commands pass"]
+            }
+        ]
+        verification: list[str] = []
+        for f in open_findings:
+            verification.extend(f.validation)
+        return {
+            "title": f"Remediation Plan: {self.repo_name}",
+            "findings": [f.id for f in sorted(open_findings, key=lambda x: (x.severity, x.id))],
+            "phases": phases,
+            "patches": self.generate_patch_actions_json()["patch_actions"],
+            "verification": verification
+        }
+
+    def generate_validation_report_json(self) -> dict[str, Any]:
+        """Return JSON Validation Report payload matching validation-report.schema.json."""
+        findings_validated = []
+        for f in self.registry.findings.values():
+            if f.validation:
+                findings_validated.append({
+                    "finding_id": f.id,
+                    "status": "NOT_VERIFIED",
+                    "validation_commands": list(f.validation),
+                    "expected_results": ["Fix verified"],
+                    "actual_results": [],
+                    "notes": f.confidence
+                })
+        return {
+            "title": f"Validation Report: {self.repo_name}",
+            "findings_validated": findings_validated,
+            "summary": "Validation results for findings with explicit verification commands."
+        }
+
+    def generate_redaction_log_json(self) -> dict[str, Any]:
+        """Return JSON Redaction Log payload matching redaction-log.schema.json."""
+        return self._build_redaction_log_data()
+
+    def _repo_root(self) -> str:
+        """Return the repository root path when a session is available."""
+        return self.session.repository_path if self.session else str(Path(".").resolve())
+
+    def _get_git_commit(self) -> str:
+        """Return the current git commit hash or 'unknown'."""
+        try:
+            res = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=self._repo_root(),
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if res.returncode == 0:
+                return res.stdout.strip()
+        except Exception:
+            pass
+        return "unknown"
+
+    def _get_git_branch(self) -> str:
+        """Return the current git branch or 'unknown'."""
+        try:
+            res = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                cwd=self._repo_root(),
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if res.returncode == 0:
+                return res.stdout.strip()
+        except Exception:
+            pass
+        return "unknown"
+
+    def generate_report_json(self) -> dict[str, Any]:
+        """Return JSON Report payload matching report.schema.json.
+
+        The report aligns with the Workbench ``HqeReport`` model by providing
+        run identity, repository context, a coverage-aware health score, an
+        executive summary with severity counts, and the full findings list.
+        """
+        run_id = self.session.session_id if self.session else "hqe-report-run"
+        timestamp = (
+            self.session.started_at
+            if self.session
+            else "1970-01-01T00:00:00Z"
+        )
+        repo_path = self._repo_root()
+        protocol_version = _derive_protocol_version()
+
+        health = self.registry.health_score()
+        score = health.score if health.score is not None else 10
+        band = _score_to_report_band(health.score)
+        reasons = list(health.reasons) if health.reasons else [f"Evaluated against HQE v{protocol_version} rubric"]
+
+        counts = self.registry.count_by_severity()
+        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        critical_high = [f for f in open_findings if f.severity in ("CRITICAL", "HIGH")]
+        severity_rank = {"CRITICAL": 0, "HIGH": 1}
+        sorted_critical_high = sorted(
+            critical_high,
+            key=lambda f: (severity_rank.get(f.severity, 2), f.id),
+        )
+
+        top_priorities = [f"{f.id}: {f.title}" for f in sorted_critical_high]
+        blockers = [
+            f"{f.id} ({f.severity}) — {f.affected_component}: {f.title}"
+            for f in sorted_critical_high
+        ]
+
+        return {
+            "run_id": run_id,
+            "protocol_version": protocol_version,
+            "timestamp": timestamp,
+            "repository": {
+                "name": self.repo_name,
+                "path": repo_path,
+                "commit": self._get_git_commit(),
+                "branch": self._get_git_branch(),
+            },
+            "health_score": {
+                "score": score,
+                "band": band,
+                "reasons": reasons,
+            },
+            "executive_summary": {
+                "top_priorities": top_priorities,
+                "critical_count": counts.get("CRITICAL", 0),
+                "high_count": counts.get("HIGH", 0),
+                "medium_count": counts.get("MEDIUM", 0),
+                "low_count": counts.get("LOW", 0),
+                "blockers": blockers,
+            },
+            "findings": self.registry.to_list(),
+        }
 
     def build_all_artifacts(self, output_dir: Path | str = "artifacts") -> dict[str, Path]:
         """Compile and write all canonical deliverables."""
@@ -344,6 +639,12 @@ class ArtifactPipeline:
             "PATCH_ACTIONS.md": self.generate_patch_actions(),
             "REMEDIATION_PLAN.md": self.generate_remediation_plan(),
             "VALIDATION_REPORT.md": self.generate_validation_report(),
+            "REDACTION_LOG.md": self.generate_redaction_log(),
+            "PATCH_ACTIONS.json": json.dumps(self.generate_patch_actions_json(), indent=2),
+            "REMEDIATION_PLAN.json": json.dumps(self.generate_remediation_plan_json(), indent=2),
+            "VALIDATION_REPORT.json": json.dumps(self.generate_validation_report_json(), indent=2),
+            "REDACTION_LOG.json": json.dumps(self.generate_redaction_log_json(), indent=2),
+            "REPORT.json": json.dumps(self.generate_report_json(), indent=2),
         }
 
         paths: dict[str, Path] = {}

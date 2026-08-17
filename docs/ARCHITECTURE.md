@@ -56,7 +56,8 @@ Skill-HQE/
 │   ├── SOURCE_AUDIT.md          # Lineage, provenance, and checksum audit
 │   ├── FINDING_SPECIFICATION.md # Finding taxonomy and severity rubric
 │   ├── SECURITY_MODEL.md        # Security architecture and trust boundaries
-│   └── THREAT_MODEL.md          # STRIDE threat model and risk mitigations
+│   ├── THREAT_MODEL.md          # STRIDE threat model and risk mitigations
+│   └── artifact-format.md       # Canonical artifact layout and schema contracts
 │
 ├── 📂 runtime/                  # Deterministic Python Execution Runtime Layer
 │   ├── __init__.py              # Package exports
@@ -64,7 +65,7 @@ Skill-HQE/
 │   ├── finding_registry.py      # Finding repository, deduplication & severity gate validator
 │   ├── evidence_store.py        # Evidence triad validator & secret redactor
 │   ├── run_manifest.py          # Reproducibility run manifest generator
-│   └── artifact_pipeline.py     # Canonical 9-deliverable markdown assembler
+│   └── artifact_pipeline.py     # Canonical markdown + JSON deliverable assembler
 │
 ├── 📂 references/               # Modular Knowledge Base (Progressively Disclosed)
 │   ├── hqe-protocol.md          # Human-readable protocol projection
@@ -149,6 +150,10 @@ Skill-HQE/
 │   ├── handoff.schema.json      # Agent handoff schema
 │   ├── session-log.schema.json  # Cross-run session log schema
 │   ├── redaction-log.schema.json# Redaction log schema
+│   ├── patch-action.schema.json # Single patch action schema
+│   ├── patch-actions.schema.json# Patch action collection schema
+│   ├── remediation-plan.schema.json # Remediation plan schema
+│   ├── validation-report.schema.json # Validation report schema
 │   └── report.schema.json       # Structured audit report schema
 │
 ├── 📂 scripts/                  # Portable Python 3.10+ CLI Helper Utilities

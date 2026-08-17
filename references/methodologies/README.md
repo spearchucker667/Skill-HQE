@@ -15,6 +15,8 @@ This directory contains portable reference definitions for the structured method
 | [5W1H](5w1h.md) | `5w1h` | Comprehensive requirement gathering and stakeholder analysis. |
 | ReACT (`react.md`) | `react` | Iterative reasoning-action cycles and adaptive problem-solving. |
 | SCAMPER (`scamper.md`) | `scamper` | Creative ideation, innovation, and alternative solution generation. |
+| [Critical Thinking](critical-think.md) | `critical-think` | Stress-testing assumptions, evidence, and conclusions before delivery. |
+| [Code Review](code-review.md) | `code-review` | Structured source-code evaluation mapped to HQE finding categories. |
 
 ---
 

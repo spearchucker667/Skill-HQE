@@ -35,6 +35,18 @@
         "type": "string"
       }
     },
+    "command_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool": { "type": "string" },
+          "command": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "result": { "type": "string" }
+        }
+      }
+    },
     "limits": {
       "type": "object"
     },

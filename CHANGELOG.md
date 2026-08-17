@@ -14,21 +14,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/CAPABILITY_PARITY_MATRIX.md`: Capability-by-capability parity mapping.
 - `docs/artifact-format.md`: Consolidated artifact directory layout and JSON schema specification.
 - Structured methodology resources: `references/gates/` (12 gate docs) and `references/methodologies/` (CAGEERF, FOCUS, 5W1H, REACT, SCAMPER, styles).
-- Runtime health-score computation in `runtime/finding_registry.py`.
+- Coverage-aware health-score computation in `runtime/health_scoring.py`; `FindingRegistry.health_score()` delegates and omits the score when coverage is unknown to avoid false-perfect claims.
 - `runtime/redaction_engine.py`: typed secret taxonomy (`TypedRedactionEngine`, `classify_secret`).
 - Missing artifact schemas: `incident-mini-report`, `patch-action`, `quick-wins-vs-structural`, `remediation-plan`, `validation-report`.
 - Expanded `runtime/artifact_pipeline.py` to emit all 13 canonical deliverables.
-- New test modules: `tests/test_protocol.py`, `tests/test_schema.py`, `tests/test_security.py`.
+- New test modules: `tests/test_protocol.py`, `tests/test_schema.py`, `tests/test_security.py`, `tests/test_ci_contracts.py`, `tests/test_evidence_disk_verification.py`, `tests/test_finding_lifecycle.py`, `tests/test_redaction.py`, `tests/test_health_scoring_coverage.py`, `tests/test_manifest_truthfulness.py`, `tests/test_artifact_truthfulness.py`, `tests/test_secret_scanner.py`, `tests/test_release_minimality.py`, `tests/test_check_skill_side_effects.py`, `tests/test_artifact_schemas.py`, `tests/test_anti_regression.py`, `tests/test_report_json.py`, `tests/test_verify_invariants.py`.
+- New runtime module: `runtime/health_scoring.py`.
+- New script: `scripts/scan_secrets.py` with `.secretscanignore` allowlist.
+- New CI workflow: `.github/workflows/release-package.yml` builds and validates the release ZIP on every push/PR.
+- New methodology resources: `references/methodologies/critical-think.md`, `references/methodologies/code-review.md`, `references/prompt-library/README.md`.
+- New anti-regression gate: `references/gates/anti-regression.md`, `scripts/anti_regression_check.py`, `tests/test_anti_regression.py`, and CI step in `.github/workflows/validate-skill.yml`.
+- Expanded workflow playbooks: `workflows/security-audit.md` and `workflows/incident-response.md` now provide step-by-step operational procedures.
+- JSON artifact companions: `runtime/artifact_pipeline.py` now emits `PATCH_ACTIONS.json`, `REMEDIATION_PLAN.json`, `VALIDATION_REPORT.json`, and `REDACTION_LOG.json` validated against their schemas.
+- v3 HQE Report JSON renderer: `runtime/artifact_pipeline.py` now emits `REPORT.json` matching `schemas/report.schema.json` (Workbench `HqeReport` model). Tests: `tests/test_report_json.py`.
+- Optional tooling: `.actionlint.yaml`, `.pre-commit-config.yaml`, and `scripts/verify_invariants.sh`. Excluded from release packages.
 - New fixture: `tests/fixtures/missing-deps-fixture/`.
 - Local risk scan hardening: path-traversal guard, prompt-injection marker detection, TODO/FIXME/HACK marker detection.
 
 ### Fixed
-- `.github/workflows/security-scan.yml` now reports matching lines on failure.
+- `.github/workflows/security-scan.yml` now uses `scripts/scan_secrets.py`, reporting `path:line:TYPE` without leaking potential secrets and supporting fixture allowlists.
 - `.github/workflows/validate-skill.yml` now installs dev dependencies before running `check_skill.py`.
 - `protocol/README.md` no longer references non-existent Rust CLI scripts.
+- `protocol/hqe-schema.json` examples updated from stale v3/v4 to v5.0.0 and dual-schema roles documented.
+- `pyproject.toml` switched to PEP 639 `license = "Apache-2.0"` with `license-files`. Build configured with `packages = []` for skill metadata-only install.
+- `scripts/check_skill.py` no longer writes `__pycache__` into the repository during Python syntax checks.
+- `runtime/run_manifest.py` now derives protocol version from `protocol/hqe-engineer.yaml`, defaults coverage to truthful `reviewed=false`/`depth=unknown`, preserves structured `command_records`, and emits coverage-aware health scores.
+- `runtime/artifact_pipeline.py` now prioritizes Master TODO by severity > confidence > effort, requires ≥2 occurrences for pattern groups, and softens overclaim wording in security/unknowns artifacts.
+- `scripts/package_skill.py` now excludes `build/`, `dist/`, and `*.egg-info` in addition to macOS/archive/test debris.
 
 ### Changed
-- 9 workflow playbooks expanded for depth and consistency (`security-audit`, `targeted-bug-hunt`, `architecture-audit`, `performance-audit`, `dependency-audit`, `documentation-audit`, `testing-audit`, `ci-audit`, `provider-independent-review`).
+- 21 workflow playbooks expanded for depth and consistency, covering every workflow in `workflows/`.
 - `README.md`, `CONTRIBUTING.md`, `SECURITY.md` updated to reflect current runtime, artifact model, and validation commands.
 
 ---

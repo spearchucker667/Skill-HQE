@@ -12,6 +12,7 @@ from .evidence_store import EvidenceStore, CodeEvidence
 from .run_manifest import RunManifestGenerator
 from .artifact_pipeline import ArtifactPipeline
 from .redaction_engine import TypedRedactionEngine, classify_secret
+from .health_scoring import HealthScore, compute_health_score, score_from_findings, score_to_band
 
 __all__ = [
     "SessionManager",
@@ -24,4 +25,8 @@ __all__ = [
     "ArtifactPipeline",
     "TypedRedactionEngine",
     "classify_secret",
+    "HealthScore",
+    "compute_health_score",
+    "score_from_findings",
+    "score_to_band",
 ]

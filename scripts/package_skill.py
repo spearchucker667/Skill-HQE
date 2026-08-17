@@ -30,12 +30,16 @@ EXCLUDED_DIRECTORIES = {
     "tests",  # Test fixtures and tests are development assets
     "audit-output",
     "generated",
+    "build",
+    "dist",
 }
 
 # Specific files excluded from release archives
 EXCLUDED_FILES = {
     ".gitignore",
     ".gitattributes",
+    ".actionlint.yaml",
+    ".pre-commit-config.yaml",
 }
 
 # Forbidden file patterns excluded from release archives
@@ -54,6 +58,8 @@ FORBIDDEN_PATTERNS = [
     "*.key",
     "*.pem",
     "*__pycache__*",
+    "*.egg-info",
+    "*.egg-info/*",
 ]
 
 

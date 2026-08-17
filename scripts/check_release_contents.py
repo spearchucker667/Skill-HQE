@@ -32,6 +32,7 @@ ALLOWED_ROOT_FILES = {
     "pyproject.toml",
     "requirements-dev.txt",
     "AGENTS.md",
+    ".secretscanignore",
 }
 
 # Allowlist of top-level directories permitted in a release
@@ -79,6 +80,8 @@ FORBIDDEN_PATTERNS = [
     "*__pycache__*",
     ".gitignore",
     ".gitattributes",
+    ".actionlint.yaml",
+    ".pre-commit-config.yaml",
 ]
 
 # Essential files that MUST be present in any valid release

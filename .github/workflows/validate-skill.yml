@@ -10,6 +10,10 @@ on:
       - 'schemas/**'
       - 'templates/**'
       - 'scripts/**'
+      - 'runtime/**'
+      - 'protocol/**'
+      - 'requirements-dev.txt'
+      - '.github/workflows/validate-skill.yml'
   pull_request:
 
 jobs:
@@ -25,11 +29,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dev dependencies
+      - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install -r requirements-dev.txt
 
       - name: Run Structural Verification
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
           python scripts/check_skill.py .
+
+      - name: Run Anti-Regression Checks
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python scripts/anti_regression_check.py .

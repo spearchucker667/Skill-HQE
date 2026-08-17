@@ -97,8 +97,11 @@ def test_finding_registry_and_severity_gate():
     assert registry.get("HQE-SEC-001") is not None
     assert registry.count_by_severity()["HIGH"] == 1
 
-    # Transition status
-    registry.transition_status("HQE-SEC-001", "FIXED")
+    # Transition status (FIXED requires verification evidence)
+    registry.transition_status(
+        "HQE-SEC-001", "FIXED",
+        verification_evidence=["commit abc123", "pytest tests/test_runtime.py::test_finding_registry_and_severity_gate"]
+    )
     assert registry.get("HQE-SEC-001").status == "FIXED"
 
 
@@ -183,7 +186,10 @@ def test_artifact_pipeline_generation():
 
 def test_health_score_bounds():
     registry = FindingRegistry()
-    assert registry.health_score() == 10
+    # Unknown coverage with no findings must not claim a perfect score.
+    score = registry.health_score()
+    assert score.omitted is True
+    assert score.score is None
 
     ev = CodeEvidence(path="src/x.py", start_line=1, end_line=1, snippet="x")
     for i in range(5):
@@ -210,7 +216,10 @@ def test_health_score_bounds():
             likelihood_justification="default path",
             exposure_evidence="src/x.py:1"
         ))
-    assert registry.health_score() == 2  # maps to Broken band (1-2)
+    # With findings present the numeric score is reported even if coverage is unknown.
+    score = registry.health_score()
+    assert score.omitted is False
+    assert score.score == 2  # maps to Broken band (1-2)
 
 
 def test_typed_redaction_engine():

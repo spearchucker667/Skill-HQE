@@ -1,164 +1,179 @@
 # HQE Artifact Format Specification
 
-This document describes the canonical artifact layout produced by the HQE `/HQE` skill. All artifacts are deterministic, versioned, and validated against JSON Schemas in `schemas/`.
+**Version**: 5.0.0  
+**Status**: Canonical  
+**Applies to**: All `/HQE` audit runs that emit deliverables through `runtime.artifact_pipeline`
 
 ---
 
-## Artifact Directory Layout
+## 1. Purpose
 
-A complete HQE audit run produces a directory (default `artifacts/`) containing:
+This document defines the canonical layout, naming, and schema contracts for HQE audit artifacts. It ensures that:
+
+- Human reviewers receive consistent Markdown deliverables.
+- Downstream tooling receives machine-readable JSON payloads.
+- Every artifact maps to a validated JSON Schema contract in `schemas/`.
+- The artifact lifecycle (template + schema + pipeline emission + test) is complete.
+
+---
+
+## 2. Canonical Artifact Directory Layout
+
+An HQE run that uses `ArtifactPipeline.build_all_artifacts(output_dir)` produces the following files in the target directory:
 
 ```text
 artifacts/
-├── HQE_REPORT.md                 # Executive summary (human-readable)
-├── HQE_FINDINGS.json             # Machine-readable findings collection
-├── HQE_RUN_MANIFEST.json         # Reproducibility manifest
-├── HQE_SESSION_LOG.json          # Cross-run session log
-├── HQE_REDACTION_LOG.json        # Secret redaction ledger
-├── RISK_REGISTER.md              # Prioritized risk table
-├── MASTER_TODO_BACKLOG.md        # Prioritized remediation backlog
-├── PATTERN_FINDINGS.md           # Cross-cutting systematic patterns
-├── QUICK_WINS_VS_STRUCTURAL.md   # Effort-sorted work split
-├── SECURITY_POSTURE_SUMMARY.md   # Security findings summary
-├── RELIABILITY_SUMMARY.md        # Reliability/boot findings summary
-├── TESTING_GAPS.md               # Required verification suites
-├── UNKNOWNS_VERIFICATION.md      # Hypotheses needing verification
-├── CONFIDENCE_DECLARATION.md     # Fact/inference/hypothesis breakdown
-├── INCIDENT_MINI_REPORT.md       # Active CRITICAL/HIGH security incidents
-├── PATCH_ACTIONS.md              # One patch per finding
-├── REMEDIATION_PLAN.md           # Phased remediation plan
-└── VALIDATION_REPORT.md          # Verification run results
+├── CONFIDENCE_DECLARATION.md
+├── INCIDENT_MINI_REPORT.md
+├── MASTER_TODO_BACKLOG.md
+├── PATTERN_FINDINGS.md
+├── PATCH_ACTIONS.md
+├── PATCH_ACTIONS.json
+├── QUICK_WINS_VS_STRUCTURAL.md
+├── REDACTION_LOG.md
+├── REDACTION_LOG.json
+├── RELIABILITY_SUMMARY.md
+├── REMEDIATION_PLAN.md
+├── REMEDIATION_PLAN.json
+├── REPORT.json
+├── RISK_REGISTER.md
+├── SECURITY_POSTURE_SUMMARY.md
+├── TESTING_GAPS.md
+├── UNKNOWNS_VERIFICATION.md
+├── VALIDATION_REPORT.md
+├── VALIDATION_REPORT.json
+└── HQE_RUN_MANIFEST.json          (generated separately by runtime/run_manifest.py)
 ```
+
+Markdown (`.md`) files are intended for human review. JSON (`.json`) files are machine-readable representations of the same artifact and are validated against the schemas in `schemas/`.
 
 ---
 
-## Machine-Readable JSON Artifacts
+## 3. Markdown Deliverables
 
-### `HQE_RUN_MANIFEST.json`
+| File | Template | Purpose |
+| :--- | :--- | :--- |
+| `RISK_REGISTER.md` | [`templates/risk-register.md`](../templates/risk-register.md) | Ranked list of all findings with severity, status, and exposure. |
+| `MASTER_TODO_BACKLOG.md` | [`templates/master-todo-backlog.md`](../templates/master-todo-backlog.md) | Prioritized remediation backlog (severity > confidence > effort). |
+| `PATTERN_FINDINGS.md` | [`templates/pattern-findings.md`](../templates/pattern-findings.md) | Systematic patterns requiring two or more related occurrences. |
+| `QUICK_WINS_VS_STRUCTURAL.md` | [`templates/quick-wins-vs-structural.md`](../templates/quick-wins-vs-structural.md) | Separation of small, localized fixes from cross-cutting work. |
+| `SECURITY_POSTURE_SUMMARY.md` | [`templates/security-posture-summary.md`](../templates/security-posture-summary.md) | Active security findings and taint chains. |
+| `RELIABILITY_SUMMARY.md` | [`templates/reliability-summary.md`](../templates/reliability-summary.md) | Boot and reliability findings. |
+| `TESTING_GAPS.md` | [`templates/testing-gaps.md`](../templates/testing-gaps.md) | Verification debt and required test suites. |
+| `UNKNOWNS_VERIFICATION.md` | [`templates/unknowns-verification.md`](../templates/unknowns-verification.md) | Hypotheses and blockers requiring live verification. |
+| `CONFIDENCE_DECLARATION.md` | [`templates/confidence-declaration.md`](../templates/confidence-declaration.md) | Audit confidence breakdown by epistemic level. |
+| `INCIDENT_MINI_REPORT.md` | [`templates/incident-mini-report.md`](../templates/incident-mini-report.md) | Active CRITICAL/HIGH security incidents. |
+| `PATCH_ACTIONS.md` | [`templates/patch-action.md`](../templates/patch-action.md) | One patch action per open finding. |
+| `REMEDIATION_PLAN.md` | [`templates/remediation-plan.md`](../templates/remediation-plan.md) | Phased remediation plan with exit criteria. |
+| `VALIDATION_REPORT.md` | [`templates/validation-report.md`](../templates/validation-report.md) | Validation status for findings with verification commands. |
+| `REDACTION_LOG.md` | [`templates/redaction-log.md`](../templates/redaction-log.md) | Log of secrets redacted during the audit. |
 
-Validated by `schemas/run-manifest.schema.json`.
+---
 
-Key fields:
+## 4. JSON Schema Contracts
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `run_id` | string | Unique run identifier. |
-| `timestamps` | object | `start` and `end` ISO-8601 timestamps. |
-| `repository_details` | object | `commit`, `path`, and optional branch/tag. |
-| `protocol_details` | object | HQE protocol name and version. |
-| `summary` | object | Counts of total, critical, high, medium, low, and info findings. |
-| `health_score` | object | `score` (1-10), `band`, `omitted` flag, and `reasons`. |
+Machine-readable artifacts validate against JSON Schema Draft-07 definitions in `schemas/`.
 
-Example:
+| Artifact | Markdown | JSON | Schema |
+| :--- | :--- | :--- | :--- |
+| Patch Actions | `PATCH_ACTIONS.md` | `PATCH_ACTIONS.json` | [`schemas/patch-actions.schema.json`](../schemas/patch-actions.schema.json) (collection) and [`schemas/patch-action.schema.json`](../schemas/patch-action.schema.json) (single item) |
+| Remediation Plan | `REMEDIATION_PLAN.md` | `REMEDIATION_PLAN.json` | [`schemas/remediation-plan.schema.json`](../schemas/remediation-plan.schema.json) |
+| Validation Report | `VALIDATION_REPORT.md` | `VALIDATION_REPORT.json` | [`schemas/validation-report.schema.json`](../schemas/validation-report.schema.json) |
+| Redaction Log | `REDACTION_LOG.md` | `REDACTION_LOG.json` | [`schemas/redaction-log.schema.json`](../schemas/redaction-log.schema.json) |
+| Report | — | `REPORT.json` | [`schemas/report.schema.json`](../schemas/report.schema.json) |
+| Findings | — | `findings.json` (input) | [`schemas/finding.schema.json`](../schemas/finding.schema.json) and [`schemas/findings.schema.json`](../schemas/findings.schema.json) |
+| Session Log | — | `HQE_SESSION_LOG.json` | [`schemas/session-log.schema.json`](../schemas/session-log.schema.json) |
+| Run Manifest | — | `HQE_RUN_MANIFEST.json` | [`schemas/run-manifest.schema.json`](../schemas/run-manifest.schema.json) |
+
+### 4.1 Validation Status Key
+
+`validation-report.schema.json` permits only the statuses documented in [`templates/validation-report.md`](../templates/validation-report.md):
+
+- `VERIFIED` — Fix confirmed, no regression.
+- `PARTIAL` — Fix works under limited conditions; follow-up required.
+- `NOT_VERIFIED` — Could not reproduce or validate.
+- `REGRESSION` — Fix caused a new issue.
+
+### 4.2 Redaction Log Schema
+
+`redaction-log.schema.json` requires:
+
+- `run_id`: identifier tying the log to the session or redaction run.
+- `timestamp`: ISO 8601 timestamp (derived from the session when available).
+- `total_redactions`: total count of redacted secrets.
+- `by_type`: mapping of secret type to count.
+- `redactions`: optional detailed list of `{file, secret_type, replacement}` records.
+
+---
+
+## 5. Pipeline Generation
+
+Artifacts are produced deterministically by `runtime.artifact_pipeline.ArtifactPipeline`:
+
+```python
+from runtime import (
+    ArtifactPipeline,
+    FindingRegistry,
+    SessionManager,
+    TypedRedactionEngine,
+)
+
+registry = FindingRegistry()
+session = SessionManager(repo_path=".")
+engine = TypedRedactionEngine()
+
+pipeline = ArtifactPipeline(
+    registry,
+    session=session,
+    repo_name="my-repo",
+    redaction_engine=engine,
+)
+artifacts = pipeline.build_all_artifacts(output_dir="artifacts")
+```
+
+The pipeline emits both Markdown and JSON forms for Patch Actions, Remediation Plan, Validation Report, Redaction Log, and a standalone `REPORT.json` so that human and machine consumers receive the same canonical data.
+
+---
+
+## 6. Example: Redaction Log JSON
 
 ```json
 {
-  "run_id": "hqe-run-20260817-123456",
-  "timestamps": {
-    "start": "2026-08-17T12:34:56+00:00",
-    "end": "2026-08-17T12:35:12+00:00"
+  "run_id": "hqe-session-20260817-181110",
+  "timestamp": "2026-08-17T18:11:10Z",
+  "total_redactions": 2,
+  "by_type": {
+    "AWS_ACCESS_KEY": 1,
+    "SLACK_TOKEN": 1
   },
-  "repository_details": {
-    "commit": "abc123...",
-    "path": "/path/to/repo"
-  },
-  "protocol_details": {
-    "name": "HQE Engineer Protocol",
-    "version": "5.0.0"
-  },
-  "summary": {
-    "total_files_scanned": 120,
-    "total_findings": 5,
-    "critical_findings": 1,
-    "high_findings": 2,
-    "medium_findings": 1,
-    "low_findings": 1,
-    "info_findings": 0
-  },
-  "health_score": {
-    "score": 6,
-    "band": "Adequate",
-    "omitted": false,
-    "reasons": ["Evaluated against HQE v5 rubric"]
-  }
+  "files_scanned": 0,
+  "redactions": [
+    {
+      "file": "config/keys.py",
+      "secret_type": "AWS_ACCESS_KEY",
+      "replacement": "REDACTED_AWS_ACCESS_KEY_1"
+    },
+    {
+      "file": "services/notifier.py",
+      "secret_type": "SLACK_TOKEN",
+      "replacement": "REDACTED_SLACK_TOKEN_1"
+    }
+  ]
 }
 ```
 
-### `HQE_FINDINGS.json`
-
-Validated by `schemas/findings.schema.json` (collection) and `schemas/finding.schema.json` (item).
-
-Each finding includes:
-
-| Field | Required | Description |
-| --- | --- | --- |
-| `id` | yes | `HQE-<CATEGORY>-<INDEX>` |
-| `title` | yes | Short finding title. |
-| `category` | yes | One of BOOT, SEC, BUG, REL, PERF, UX, DX, DOC, DEBT, DEPS. |
-| `severity` | yes | CRITICAL, HIGH, MEDIUM, LOW, INFO. |
-| `confidence` | yes | FACT, INFERENCE, HYPOTHESIS, NEEDS_VERIFICATION. |
-| `status` | yes | CONFIRMED, STRONGLY_SUPPORTED, SUSPECTED, NOT_REPRODUCED, FIXED, REOPENED, SUPERSEDED. |
-| `affected_component` | yes | File path, module, or subsystem. |
-| `evidence` | yes | Array of `CodeEvidence` objects. |
-| `observed_behavior` | yes | What the code actually does. |
-| `expected_behavior` | yes | What the code should do. |
-| `root_cause` | yes | Why the issue exists. |
-| `impact` | yes | Concrete impact statement. |
-| `remediation` | yes | Minimal-change fix. |
-| `effort` | yes | S, M, or L. |
-| `regression_risk` | yes | Risk of the fix causing regressions. |
-| `preconditions` | CRITICAL/HIGH | Conditions required for exploitation/failure. |
-| `exploitability` | CRITICAL/HIGH | How easily the issue can be triggered. |
-| `blast_radius` | CRITICAL/HIGH | Scope of impact. |
-| `likelihood` | CRITICAL/HIGH | Likelihood of occurrence. |
-| `likelihood_justification` | CRITICAL/HIGH | Evidence for likelihood. |
-| `exposure_evidence` | CRITICAL/HIGH | Proof of exposure. |
-| `taint_chain` | SEC CRITICAL/HIGH | Source → transforms → validation boundary → sink → impact. |
-
-### `HQE_SESSION_LOG.json`
-
-Validated by `schemas/session-log.schema.json`. Tracks session state transitions, discovered findings, tool executions, and next-session notes.
-
-### `HQE_REDACTION_LOG.json`
-
-Validated by `schemas/redaction-log.schema.json`. Records every secret redaction with type, replacement token, and source file.
-
 ---
 
-## Markdown Deliverables
+## 7. Verification
 
-Each `.md` deliverable has a matching template in `templates/` and a JSON schema in `schemas/` for machine validation:
-
-| Markdown File | Template | Schema |
-| --- | --- | --- |
-| `RISK_REGISTER.md` | `templates/risk-register.md` | `schemas/risk-register.schema.json` |
-| `MASTER_TODO_BACKLOG.md` | `templates/master-todo-backlog.md` | `schemas/master-todo.schema.json` |
-| `PATTERN_FINDINGS.md` | `templates/pattern-findings.md` | `schemas/pattern-findings.schema.json` |
-| `QUICK_WINS_VS_STRUCTURAL.md` | `templates/quick-wins-vs-structural.md` | `schemas/quick-wins-vs-structural.schema.json` |
-| `SECURITY_POSTURE_SUMMARY.md` | `templates/security-posture-summary.md` | `schemas/security-posture.schema.json` |
-| `RELIABILITY_SUMMARY.md` | `templates/reliability-summary.md` | `schemas/reliability-summary.schema.json` |
-| `TESTING_GAPS.md` | `templates/testing-gaps.md` | `schemas/testing-gaps.schema.json` |
-| `UNKNOWNS_VERIFICATION.md` | `templates/unknowns-verification.md` | `schemas/unknowns.schema.json` |
-| `CONFIDENCE_DECLARATION.md` | `templates/confidence-declaration.md` | `schemas/confidence-declaration.schema.json` |
-| `INCIDENT_MINI_REPORT.md` | `templates/incident-mini-report.md` | `schemas/incident-mini-report.schema.json` |
-| `PATCH_ACTIONS.md` | `templates/patch-action.md` | `schemas/patch-action.schema.json` |
-| `REMEDIATION_PLAN.md` | `templates/remediation-plan.md` | `schemas/remediation-plan.schema.json` |
-| `VALIDATION_REPORT.md` | `templates/validation-report.md` | `schemas/validation-report.schema.json` |
-
----
-
-## Validation
-
-To validate the artifact format of an HQE run:
+Run the artifact schema tests after any change to the pipeline or schemas:
 
 ```bash
-python3 scripts/validate_findings.py artifacts/HQE_FINDINGS.json
-python3 scripts/validate_manifest.py artifacts/HQE_RUN_MANIFEST.json
-python3 scripts/validate_session_log.py artifacts/HQE_SESSION_LOG.json
+python3 -m pytest tests/test_artifact_schemas.py -v
 ```
 
----
+Run the full skill integrity check:
 
-## Versioning
-
-Artifact schemas use JSON Schema Draft-07 and are versioned with the HQE Protocol. When the protocol version in `VERSION` changes, update schema metadata and regenerate fixtures/tests as needed.
+```bash
+python3 scripts/check_skill.py .
+```

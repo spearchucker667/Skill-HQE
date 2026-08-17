@@ -3,7 +3,7 @@
   "$id": "https://hqe-protocol.dev/schemas/v5.0.0/hqe-schema.json",
   "x_hqe_schema_version": "5.0.0",
   "title": "HQE Engineer Protocol Schema v5.0.0 (hqe-schema.json)",
-  "description": "Schema for HQE Engineer Protocol v5.0.0 validating evidence-driven audits, remediation workflows, security controls, quality gates, and reproducibility.",
+  "description": "Legacy/tooling schema for HQE Engineer Protocol documents (v3.x-v5.x). Used by verify.py and tooling integrations. The canonical validator contract for protocol/hqe-engineer.yaml is protocol/hqe-engineer-schema.json.",
   "type": "object",
   "required": [
     "schema_version",
@@ -19,7 +19,7 @@
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "description": "Semantic version of the schema",
       "examples": [
-        "3.1.0"
+        "5.0.0"
       ]
     },
     "protocol_version": {
@@ -27,7 +27,7 @@
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "description": "Semantic version of the protocol",
       "examples": [
-        "3.1.0"
+        "5.0.0"
       ]
     },
     "last_updated": {

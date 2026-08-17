@@ -5,8 +5,8 @@ This folder contains the canonical HQE Engineer protocol definition and its vali
 ## Files
 
 - `hqe-engineer.yaml` - Active protocol source of truth (YAML)
-- `hqe-engineer-schema.json` - JSON Schema Draft 2020-12 specification for the protocol YAML
-- `hqe-schema.json` - JSON schema used by `verify.py` and tooling
+- `hqe-engineer-schema.json` - JSON Schema Draft 2020-12 specification for the protocol YAML; validates `hqe-engineer.yaml`
+- `hqe-schema.json` - Legacy/tooling schema used by `verify.py`; kept for backwards compatibility with v3.x-v4.x verification workflows
 - `validate.py` - Canonical protocol validator with semantic linting
 - `verify.py` - Standalone verbose verifier with structured error output
 - `VALIDATORS.md` - Notes on validation and versioning

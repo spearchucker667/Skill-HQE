@@ -1,0 +1,19 @@
+# Actionlint configuration for Skill-HQE
+# https://github.com/rhysd/actionlint/blob/main/docs/usage.md#configuration
+#
+# Purpose:
+#   Define self-hosted runner labels and known configuration variables so that
+#   actionlint does not report false positives for the GitHub Actions workflows
+#   under .github/workflows/.
+#
+# Usage:
+#   actionlint -config-file .actionlint.yaml
+
+self-hosted-runner:
+  labels:
+    - ubuntu-latest
+
+# Known repository/secret names used in workflows.  Add entries here when a
+# workflow references a GitHub secret or variable that actionlint cannot
+# validate from the repository configuration.
+config-variables: []

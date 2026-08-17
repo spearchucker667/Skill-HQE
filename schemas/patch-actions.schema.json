@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HQE Patch Actions Collection",
+  "type": "object",
+  "properties": {
+    "patch_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "patch-action.schema.json"
+      }
+    }
+  },
+  "required": [
+    "patch_actions"
+  ],
+  "additionalProperties": false
+}

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from .evidence_store import CodeEvidence
+from .health_scoring import HealthScore, compute_health_score
 
 ID_RE = re.compile(r"^HQE-(BOOT|SEC|BUG|REL|PERF|UX|DX|DOC|DEBT|DEPS)-[0-9]{3,}$")
 
@@ -18,6 +19,18 @@ VALID_STATUSES = {
     "NOT_REPRODUCED", "FIXED", "REOPENED", "SUPERSEDED"
 }
 VALID_EFFORTS = {"S", "M", "L"}
+
+# HQE v5 lifecycle transition graph. Terminal states have no outbound edges
+# unless explicitly reopened/superseded through dedicated APIs.
+TRANSITION_GRAPH: dict[str, set[str]] = {
+    "SUSPECTED": {"STRONGLY_SUPPORTED", "CONFIRMED", "NOT_REPRODUCED"},
+    "STRONGLY_SUPPORTED": {"CONFIRMED", "SUSPECTED", "NOT_REPRODUCED"},
+    "NOT_REPRODUCED": {"SUSPECTED", "STRONGLY_SUPPORTED"},
+    "CONFIRMED": {"FIXED", "SUPERSEDED"},
+    "FIXED": {"REOPENED"},
+    "REOPENED": {"CONFIRMED", "FIXED"},
+    "SUPERSEDED": set(),
+}
 
 
 @dataclass
@@ -145,9 +158,29 @@ class Finding:
 class FindingRegistry:
     def __init__(self):
         self.findings: dict[str, Finding] = {}
+        self._history: dict[str, list[dict[str, Any]]] = {}
+
+    def _record_transition(
+        self,
+        finding_id: str,
+        from_status: str,
+        to_status: str,
+        reason: str | None = None,
+        verification_evidence: list[str] | None = None
+    ) -> None:
+        import datetime
+        self._history.setdefault(finding_id, []).append({
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "from_status": from_status,
+            "to_status": to_status,
+            "reason": reason,
+            "verification_evidence": verification_evidence or []
+        })
 
     def register(self, finding: Finding) -> None:
         """Register a finding and validate semantic rules."""
+        if finding.id in self.findings:
+            raise ValueError(f"Finding '{finding.id}' is already registered")
         errors = finding.validate()
         if errors:
             raise ValueError(f"Finding validation failed for {finding.id}:\n" + "\n".join(f" - {e}" for e in errors))
@@ -156,14 +189,85 @@ class FindingRegistry:
     def get(self, finding_id: str) -> Finding | None:
         return self.findings.get(finding_id)
 
-    def transition_status(self, finding_id: str, new_status: str) -> Finding:
-        """Update finding status with valid lifecycle transition."""
+    def get_history(self, finding_id: str) -> list[dict[str, Any]]:
+        return list(self._history.get(finding_id, []))
+
+    def update(self, finding_id: str, **kwargs: Any) -> Finding:
+        """Explicitly update mutable fields of a registered finding."""
+        finding = self.findings.get(finding_id)
+        if not finding:
+            raise KeyError(f"Finding '{finding_id}' not found in registry")
+        for key, value in kwargs.items():
+            if not hasattr(finding, key):
+                raise ValueError(f"Finding has no attribute '{key}'")
+            setattr(finding, key, value)
+        return finding
+
+    def merge(self, target_id: str, source_id: str) -> Finding:
+        """Merge source finding evidence into target and supersede source."""
+        target = self.findings.get(target_id)
+        source = self.findings.get(source_id)
+        if not target or not source:
+            raise KeyError("Both target and source findings must exist")
+        target.evidence.extend(source.evidence)
+        target.validation = list(set(target.validation + source.validation))
+        target.related_findings = list(set(target.related_findings + [source_id] + source.related_findings))
+        self.supersede(source_id, target_id, reason=f"merged into {target_id}")
+        return target
+
+    def supersede(self, finding_id: str, successor_id: str, reason: str | None = None) -> Finding:
+        """Mark a finding as superseded by another finding."""
+        finding = self.findings.get(finding_id)
+        successor = self.findings.get(successor_id)
+        if not finding:
+            raise KeyError(f"Finding '{finding_id}' not found in registry")
+        if not successor:
+            raise KeyError(f"Successor finding '{successor_id}' not found in registry")
+        old_status = finding.status
+        finding.status = "SUPERSEDED"
+        finding.related_findings.append(successor_id)
+        self._record_transition(finding_id, old_status, "SUPERSEDED", reason=reason)
+        return finding
+
+    def transition_status(
+        self,
+        finding_id: str,
+        new_status: str,
+        *,
+        reason: str | None = None,
+        verification_evidence: list[str] | None = None
+    ) -> Finding:
+        """Update finding status with a valid lifecycle transition.
+
+        FIXED requires verification evidence. REOPENED requires a reason.
+        """
         if new_status not in VALID_STATUSES:
             raise ValueError(f"Invalid finding status '{new_status}'")
         finding = self.findings.get(finding_id)
         if not finding:
             raise KeyError(f"Finding '{finding_id}' not found in registry")
+
+        current = finding.status
+        allowed = TRANSITION_GRAPH.get(current, set())
+        if new_status not in allowed:
+            raise ValueError(
+                f"invalid transition from '{current}' to '{new_status}'"
+            )
+
+        if new_status == "FIXED" and not verification_evidence:
+            raise ValueError("FIXED transition requires verification evidence")
+
+        if new_status == "REOPENED" and not reason:
+            raise ValueError("REOPENED transition requires a reason")
+
         finding.status = new_status
+        self._record_transition(
+            finding_id,
+            current,
+            new_status,
+            reason=reason,
+            verification_evidence=verification_evidence
+        )
         return finding
 
     def by_category(self, category: str) -> list[Finding]:
@@ -178,39 +282,25 @@ class FindingRegistry:
             counts[f.severity] = counts.get(f.severity, 0) + 1
         return counts
 
-    def health_score(self) -> int:
-        """Return 1-10 health score weighted by severity counts.
+    def health_score(
+        self,
+        *,
+        coverage_known: bool = False,
+        coverage_depth: str = "unknown",
+        unreviewed_surfaces: list[str] | None = None,
+    ) -> HealthScore:
+        """Return a coverage-aware 1-10 health score.
 
-        The protocol rubric maps 1-2 to Broken, 3-4 to Unstable, 5-6 to Fragile,
-        7-8 to Solid, and 9-10 to Production-ready. This method returns a
-        numeric score in the same 1-10 range so it can be embedded directly in
-        the run manifest.
+        Delegates to :mod:`runtime.health_scoring` so the scoring algorithm is
+        defined in one place.  When no findings exist and coverage is unknown,
+        the score is omitted rather than reported as a false-perfect 10.
         """
-        if not self.findings:
-            return 10
-
-        weights = {
-            "CRITICAL": -25,
-            "HIGH": -15,
-            "MEDIUM": -8,
-            "LOW": -3,
-            "INFO": 0
-        }
-        counts = self.count_by_severity()
-        penalty = sum(weights.get(sev, 0) * count for sev, count in counts.items())
-        raw = 100 + penalty
-        score = max(1, min(100, raw))
-
-        # Map 0-100 to 1-10 rubric used by the run manifest.
-        if score >= 90:
-            return 10
-        if score >= 75:
-            return 8
-        if score >= 55:
-            return 6
-        if score >= 30:
-            return 4
-        return 2
+        return compute_health_score(
+            self.findings.values(),
+            coverage_known=coverage_known,
+            coverage_depth=coverage_depth,
+            unreviewed_surfaces=unreviewed_surfaces,
+        )
 
     def to_list(self) -> list[dict[str, Any]]:
         return [f.to_dict() for f in self.findings.values()]

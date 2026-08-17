@@ -1,0 +1,98 @@
+"""Finding registry lifecycle, duplicate-ID, and transition-rule tests."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from runtime import FindingRegistry, Finding, CodeEvidence
+
+
+def _make_finding(fid: str, status: str = "CONFIRMED", severity: str = "MEDIUM") -> Finding:
+    ev = CodeEvidence(path="src/main.py", snippet="buggy line", start_line=1, end_line=1)
+    return Finding(
+        id=fid,
+        title=f"Finding {fid}",
+        category="BUG",
+        severity=severity,
+        confidence="FACT",
+        status=status,
+        affected_component="src/main.py",
+        observed_behavior="observed",
+        expected_behavior="expected",
+        root_cause="cause",
+        impact="impact",
+        remediation="fix",
+        effort="S",
+        regression_risk="Low",
+        evidence=[ev]
+    )
+
+
+def test_duplicate_register_rejected():
+    registry = FindingRegistry()
+    f1 = _make_finding("HQE-BUG-001")
+    f2 = _make_finding("HQE-BUG-001")
+    registry.register(f1)
+    with pytest.raises(ValueError, match="already registered"):
+        registry.register(f2)
+
+
+def test_explicit_update_works():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001")
+    registry.register(f)
+    registry.update("HQE-BUG-001", title="Updated title")
+    assert registry.get("HQE-BUG-001").title == "Updated title"
+
+
+def test_invalid_status_transition_rejected():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001", status="FIXED")
+    registry.register(f)
+    with pytest.raises(ValueError, match="invalid transition"):
+        registry.transition_status("HQE-BUG-001", "SUSPECTED")
+
+
+def test_valid_status_transition_accepted():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001", status="CONFIRMED")
+    registry.register(f)
+    registry.transition_status("HQE-BUG-001", "FIXED", verification_evidence=["pytest test_bug"])
+    assert registry.get("HQE-BUG-001").status == "FIXED"
+
+
+def test_fixed_requires_verification_evidence():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001", status="CONFIRMED")
+    registry.register(f)
+    with pytest.raises(ValueError, match="verification evidence"):
+        registry.transition_status("HQE-BUG-001", "FIXED")
+
+
+def test_supersede_preserves_history():
+    registry = FindingRegistry()
+    f1 = _make_finding("HQE-BUG-001", status="CONFIRMED")
+    registry.register(f1)
+    f2 = _make_finding("HQE-BUG-002", status="CONFIRMED")
+    registry.register(f2)
+    registry.supersede("HQE-BUG-001", "HQE-BUG-002", reason="consolidated")
+    assert registry.get("HQE-BUG-001").status == "SUPERSEDED"
+    history = registry.get_history("HQE-BUG-001")
+    assert any(entry["to_status"] == "SUPERSEDED" for entry in history)
+
+
+def test_reopen_fixed_requires_reason():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001", status="CONFIRMED")
+    registry.register(f)
+    registry.transition_status("HQE-BUG-001", "FIXED", verification_evidence=["pytest"])
+    with pytest.raises(ValueError, match="reason"):
+        registry.transition_status("HQE-BUG-001", "REOPENED")
+    registry.transition_status("HQE-BUG-001", "REOPENED", reason="regression observed")
+    assert registry.get("HQE-BUG-001").status == "REOPENED"
