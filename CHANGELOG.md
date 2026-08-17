@@ -41,6 +41,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `runtime/run_manifest.py` now derives protocol version from `protocol/hqe-engineer.yaml`, defaults coverage to truthful `reviewed=false`/`depth=unknown`, preserves structured `command_records`, and emits coverage-aware health scores.
 - `runtime/artifact_pipeline.py` now prioritizes Master TODO by severity > confidence > effort, requires ≥2 occurrences for pattern groups, and softens overclaim wording in security/unknowns artifacts.
 - `scripts/package_skill.py` now excludes `build/`, `dist/`, and `*.egg-info` in addition to macOS/archive/test debris.
+- `runtime/finding_registry.py` now serializes findings schema-totally (`validation`/`related_findings` always emitted) and validates the serialized finding against `schemas/finding.schema.json` at registration/update, closing the runtime/schema split-brain that caused delayed artifact failures.
+- `runtime/finding_registry.py`: `merge()` now uses ordered deduplication instead of `list(set(...))` for deterministic artifact output.
+- `runtime/evidence_store.py`: anchor verification now supports multi-line 2–5 line snippets and requires the snippet to contain the anchor; symbol/grep_signature disk verification now checks the submitted snippet against disk content, so fabricated snippets cannot pass a disk-verification request.
+- `runtime/artifact_pipeline.py`: remediation plans now sort by severity rank (CRITICAL → HIGH → MEDIUM → LOW → INFO) instead of alphabetically; patch actions (markdown and JSON) now only include open findings.
+- `runtime/session_manager.py`: session logs now serialize/restore lifecycle `state`; `reprioritized` matches `session-log.schema.json` (array of strings); added `SessionManager.load_from_file()`/`from_dict()`.
+- `scripts/scan_secrets.py`: allowlist entries now honor exact paths, directory prefixes (`tests/`), and glob patterns instead of only `endswith`; removed the dead `KNOWN_TEST_TOKENS` mechanism.
+- `scripts/check_protocol_sync.py`: removed stale `HQE_PROTOCOL_SKILL_EMBED_PACKAGE` logic; a missing `SOURCE_CHECKSUMS.sha256` is now a hard failure.
+- `scripts/create_run_manifest.py`: `--health-score` now defaults to a truthful coverage-aware calculation; findings load/validation failures are fatal unless `--best-effort` is passed.
+- `scripts/build_artifacts.py`: `--session-file` now actually loads and restores the session (identity, timestamps, state, progress) instead of creating a fresh session.
+- `scripts/validate_protocol_bundle.py`: strict metadata mode now asserts the protocol `license` matches `pyproject.toml` (Apache-2.0).
+- Protocol metadata corrected to Apache-2.0 (`protocol/hqe-engineer.yaml`) to match `LICENSE`, `pyproject.toml`, README, and NOTICE.
+- Tests migrated to v5 lifecycle (`VERIFIED`/`OPEN`/`DEFERRED` instead of `FIXED`/`REOPENED`/`SUPERSEDED`) and v5 health bands; credential detection vectors are now constructed at runtime from nonmatching fragments so the repository contains no literal credential patterns.
+- CI hardening: all four workflows declare `permissions: contents: read` and `persist-credentials: false`; actions upgraded to Node 24 runtimes (`checkout@v5`, `setup-python@v6`, `upload-artifact@v5`); independent CI gates run with `if: always()`; `requirements-dev.txt` is pinned to exact versions.
+- README CI badge is now live GitHub Actions status instead of a hard-coded green badge.
 
 ### Changed
 - 21 workflow playbooks expanded for depth and consistency, covering every workflow in `workflows/`.

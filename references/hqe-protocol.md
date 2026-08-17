@@ -54,7 +54,7 @@ Findings are strictly evidence-backed. Speculation without citation is prohibite
   - `[INFERENCE]`: Deduced from code structure, data flow, or configuration.
   - `[HYPOTHESIS]`: Plausible explanation under investigation; requires confirmation.
   - `[NEEDS_VERIFICATION]`: Potential defect where full execution path or runtime exposure is unverified.
-- **Finding Status Lifecycle:** `CONFIRMED` → `STRONGLY_SUPPORTED` → `SUSPECTED` → `NOT_REPRODUCED` → `FIXED` → `REOPENED` → `SUPERSEDED`.
+- **Finding Status Lifecycle:** `OPEN` → `CONFIRMED` → `FIX_IN_PROGRESS` → `VERIFIED`, with `REJECTED` and `DEFERRED` terminal-until-reopened states (reopening returns to `OPEN`).
 
 ---
 

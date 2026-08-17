@@ -106,7 +106,7 @@ Flag the triggering item as `STOP-THE-LINE: [issue]` in the session log and do n
 **Evidence to collect**:
 - Diff per finding.
 - Test results after each fix.
-- Updated finding status (`FIXED`, `FIX_IN_PROGRESS`, `OPEN`).
+- Updated finding status (`VERIFIED`, `FIX_IN_PROGRESS`, `OPEN`).
 
 **Exit criteria**:
 - [ ] Each fix is applied and validated before the next begins.
@@ -136,7 +136,7 @@ Flag the triggering item as `STOP-THE-LINE: [issue]` in the session log and do n
 **Goal**: Produce clean, consistent deliverables.
 
 1. **Update finding statuses**:
-   - Update the status of each finding (`FIXED`, `REOPENED`, `DEFERRED`, etc.).
+   - Update the status of each finding (`VERIFIED`, `OPEN`, `DEFERRED`, etc.).
 2. **Emit remediation artifacts**:
    - `HQE_REPORT.md` remediation section.
    - Updated `HQE_FINDINGS.json`.

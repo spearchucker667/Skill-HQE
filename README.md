@@ -11,7 +11,7 @@
     High Quality Engineering Skill for Autonomous AI Agents
 ```
 
-[![CI](https://img.shields.io/badge/CI-Passing-brightgreen.svg?style=for-the-badge&logo=githubactions)](.github/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/spearchucker667/Skill-HQE/ci.yml?style=for-the-badge&logo=githubactions)](.github/workflows/ci.yml)
 [![Protocol](https://img.shields.io/badge/Protocol-HQE%20v5.0.0-blue.svg?style=for-the-badge)](protocol/hqe-engineer.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellow.svg?style=for-the-badge)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Threat%20Model%20Enforced-red.svg?style=for-the-badge)](docs/SECURITY_MODEL.md)
@@ -324,7 +324,7 @@ Skill-HQE/
 The `runtime/` package brings executable control-plane rigor to Skill-HQE without requiring compiled native binaries:
 
 - **`SessionManager`** (`runtime/session_manager.py`): State machine managing transitions from `INITIALIZED` through `ORIENTING`, `ANALYZING`, `REMEDIATING`, `VERIFYING`, and `COMPLETED`.
-- **`FindingRegistry`** (`runtime/finding_registry.py`): Invariant enforcement for finding schemas, lifecycle tracking (`CONFIRMED`, `FIXED`, `SUPERSEDED`), and strict severity gate validation.
+- **`FindingRegistry`** (`runtime/finding_registry.py`): Invariant enforcement for finding schemas, v5 lifecycle tracking (`OPEN`, `CONFIRMED`, `FIX_IN_PROGRESS`, `VERIFIED`, `REJECTED`, `DEFERRED`), and strict severity gate validation.
 - **`EvidenceStore`** (`runtime/evidence_store.py`): Verification of code evidence triads (`path`, line ranges/anchors, snippets) and automated secret redaction.
 - **`RunManifestGenerator`** (`runtime/run_manifest.py`): Deterministic reproducibility logger capturing git state, tool executions, and coverage metrics.
 - **`FindingRegistry`** (`runtime/finding_registry.py`): Also computes a deterministic 1–10 health score from severity-weighted finding counts.

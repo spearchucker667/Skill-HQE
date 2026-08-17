@@ -110,7 +110,14 @@ class EvidenceStore:
         anchor: str,
         require_unique: bool
     ) -> tuple[bool, str | None]:
-        """Return (verified, method_or_error)."""
+        """Return (verified, method_or_error).
+
+        HQE evidence snippets are typically 2-5 lines, so verification must not
+        assume the snippet fits on a single line. The anchor must exist in the
+        file, must be contained in the submitted snippet, and the whole
+        normalized snippet must appear contiguously in the file content. This
+        rejects fabricated snippets even when the anchor itself is genuine.
+        """
         file_text = target_path.read_text(encoding="utf-8", errors="replace")
         lines = file_text.splitlines()
         matches = [idx for idx, line in enumerate(lines, start=1) if anchor in line]
@@ -121,12 +128,12 @@ class EvidenceStore:
         if require_unique and len(matches) > 1:
             return False, f"ambiguous anchor: {len(matches)} occurrences in {target_path.name}"
 
-        # Also require the snippet content to appear at one of the anchor lines.
         normalized_snippet = _normalize_line(snippet)
-        for line_no in matches:
-            if normalized_snippet in _normalize_line(lines[line_no - 1]):
-                return True, "anchor"
-        return False, "snippet not found near anchor"
+        if _normalize_line(anchor) not in normalized_snippet:
+            return False, "snippet does not contain the anchor"
+        if normalized_snippet not in _normalize_line(file_text):
+            return False, "snippet does not match disk content for anchor"
+        return True, "anchor"
 
     def add_evidence(
         self,
@@ -191,10 +198,17 @@ class EvidenceStore:
                 verified = True
                 verification_method = result
             else:
-                # symbol/grep_signature locators are accepted but cannot be
-                # cryptographically verified from disk alone; record them as
-                # unverified disk checks.
-                verification_method = "locator_present"
+                # symbol/grep_signature locators: the submitted snippet must
+                # still match disk content and the locator must be present in
+                # the file, otherwise a fabricated snippet would survive a
+                # disk-verification request.
+                ok, result = self._verify_locator_only(
+                    target_path, clean_snippet, symbol, grep_signature
+                )
+                if not ok:
+                    raise ValueError(result)
+                verified = True
+                verification_method = result
 
         item = CodeEvidence(
             path=path,
@@ -211,6 +225,29 @@ class EvidenceStore:
         )
         self.evidence_items.append(item)
         return item
+
+    def _verify_locator_only(
+        self,
+        target_path: Path,
+        snippet: str,
+        symbol: str | None,
+        grep_signature: str | None,
+    ) -> tuple[bool, str | None]:
+        """Return (verified, method_or_error) for symbol/grep_signature locators.
+
+        The normalized snippet must appear contiguously in the file and the
+        locator string itself must be present, so fabricated snippets cannot
+        pass a disk-verification request.
+        """
+        file_text = target_path.read_text(encoding="utf-8", errors="replace")
+        if _normalize_line(snippet) not in _normalize_line(file_text):
+            return False, "snippet does not match disk content"
+        if symbol is not None and symbol not in file_text:
+            return False, f"symbol not found in {target_path.name}"
+        if grep_signature is not None and grep_signature not in file_text:
+            return False, f"grep_signature not found in {target_path.name}"
+        method = "symbol" if symbol is not None else "grep_signature"
+        return True, method
 
     def record_tool_execution(
         self,

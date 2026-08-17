@@ -127,3 +127,68 @@ def test_no_locator_rejected_when_verification_enabled():
                 snippet="def hello():",
                 verify_against_disk=True
             )
+
+
+def test_multi_line_snippet_with_anchor_accepted():
+    """HQE evidence snippets are 2-5 lines; anchor verification must not assume a single line."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src = Path(tmpdir) / "src.py"
+        src.write_text(
+            "def authenticate():\n"
+            "    token = request.headers.get('Authorization')\n"
+            "    return verify(token)\n",
+            encoding="utf-8",
+        )
+        store = EvidenceStore(repo_root=tmpdir)
+        ev = store.add_evidence(
+            path="src.py",
+            snippet="def authenticate():\n    token = request.headers.get('Authorization')\n    return verify(token)",
+            anchor="def authenticate():",
+            verify_against_disk=True
+        )
+        assert ev.verified is True
+        assert ev.verification_method == "anchor"
+
+
+def test_fabricated_snippet_with_genuine_anchor_rejected():
+    """A fabricated snippet must fail even when the anchor itself exists in the file."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src = Path(tmpdir) / "src.py"
+        src.write_text("class Greeter:\n    def hello(self):\n        pass\n", encoding="utf-8")
+        store = EvidenceStore(repo_root=tmpdir)
+        with pytest.raises(ValueError, match="snippet does not match disk content"):
+            store.add_evidence(
+                path="src.py",
+                snippet="class Greeter:\n    return 'forged'",
+                anchor="class Greeter",
+                verify_against_disk=True
+            )
+
+
+def test_symbol_locator_checks_snippet_against_disk():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src = Path(tmpdir) / "src.py"
+        src.write_text("def helper():\n    return 42\n", encoding="utf-8")
+        store = EvidenceStore(repo_root=tmpdir)
+        ev = store.add_evidence(
+            path="src.py",
+            snippet="def helper():\n    return 42",
+            symbol="helper",
+            verify_against_disk=True
+        )
+        assert ev.verified is True
+        assert ev.verification_method == "symbol"
+
+
+def test_symbol_locator_rejects_fabricated_snippet():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src = Path(tmpdir) / "src.py"
+        src.write_text("def helper():\n    return 42\n", encoding="utf-8")
+        store = EvidenceStore(repo_root=tmpdir)
+        with pytest.raises(ValueError, match="snippet does not match disk content"):
+            store.add_evidence(
+                path="src.py",
+                snippet="def helper():\n    return 'forged'",
+                symbol="helper",
+                verify_against_disk=True
+            )

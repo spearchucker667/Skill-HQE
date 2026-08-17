@@ -128,9 +128,9 @@ def test_incident_report_includes_active_high_security_findings():
     assert "**Active Security Incidents:** 1" in text
 
 
-def test_incident_report_excludes_fixed_security_findings():
+def test_incident_report_excludes_verified_security_findings():
     registry = FindingRegistry()
-    registry.register(_make_high_security_finding("HQE-SEC-001", status="FIXED"))
+    registry.register(_make_high_security_finding("HQE-SEC-001", status="VERIFIED"))
     pipeline = ArtifactPipeline(registry, repo_name="test")
     text = pipeline.generate_incident_mini_report()
     assert "HQE-SEC-001" not in text
@@ -139,7 +139,16 @@ def test_incident_report_excludes_fixed_security_findings():
 
 def test_incident_report_excludes_low_security_findings():
     registry = FindingRegistry()
-    registry.register(_make_finding("HQE-SEC-001", category="SEC", severity="LOW"))
+    finding = _make_finding("HQE-SEC-001", category="SEC", severity="LOW")
+    # SEC findings must carry a taint chain regardless of severity.
+    finding.taint_chain = {
+        "source": "auth.rs#L1",
+        "transforms": ["comparator"],
+        "validation_boundary": "auth module",
+        "sink": "equality check",
+        "impact": "minor side channel",
+    }
+    registry.register(finding)
     pipeline = ArtifactPipeline(registry, repo_name="test")
     text = pipeline.generate_incident_mini_report()
     assert "HQE-SEC-001" not in text

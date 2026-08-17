@@ -46,6 +46,24 @@ def load_json(path: Path) -> dict:
     return data
 
 
+def _derive_pyproject_license(pyproject_path: Path) -> str:
+    """Return the SPDX license identifier from pyproject.toml, if declared."""
+    try:
+        text = pyproject_path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    # PEP 621/639: license = "SPDX" or license = { text = "..." } / file = "..."
+    license_lines = [ln.strip() for ln in text.splitlines() if "license" in ln.lower()]
+    for ln in license_lines:
+        stripped = ln.strip()
+        if "=" not in stripped:
+            continue
+        value = stripped.split("=", 1)[1].strip().strip('"').strip("'")
+        if value and not value.startswith("{") and not value.startswith("["):
+            return value
+    return ""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -152,6 +170,19 @@ def main() -> int:
     if protocol_version and protocol_version not in schema_title:
         msg = f"schema title does not contain protocol version {protocol_version}: {schema_title}"
         (errors if args.strict_schema_metadata else warnings).append(msg)
+
+    # Repository metadata consistency: the protocol license must match the
+    # governing LICENSE file / pyproject.toml SPDX identifier (Apache-2.0).
+    protocol_license = str(protocol.get("license", "")).strip()
+    pyproject_path = root / "pyproject.toml"
+    if pyproject_path.is_file():
+        pyproject_license = _derive_pyproject_license(pyproject_path)
+        if protocol_license and pyproject_license and protocol_license != pyproject_license:
+            msg = (
+                f"protocol license ({protocol_license}) does not match pyproject.toml "
+                f"license ({pyproject_license})"
+            )
+            (errors if args.strict_schema_metadata else warnings).append(msg)
 
     for warning in warnings:
         print(f"WARNING: {warning}")

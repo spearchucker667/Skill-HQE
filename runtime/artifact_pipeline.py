@@ -301,13 +301,14 @@ class ArtifactPipeline:
 
     def generate_patch_actions(self) -> str:
         """Assemble Patch Actions deliverable for all open findings."""
+        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         lines = [
             f"# Patch Actions: {self.repo_name}",
             "",
             "One patch per finding with exact intended change, diff, validation, and rollback.",
             ""
         ]
-        for f in sorted(self.registry.findings.values(), key=lambda x: x.id):
+        for f in sorted(open_findings, key=lambda x: x.id):
             lines.append(f"## {f.id} — {f.title}")
             lines.append(f"**Files:** `{f.affected_component}`")
             lines.append(f"**Exact Intended Change:** {f.remediation}")
@@ -334,7 +335,8 @@ class ArtifactPipeline:
             "| ID | Title | Severity | Effort | Status |",
             "| :--- | :--- | :--- | :--- | :--- |"
         ]
-        for f in sorted(open_findings, key=lambda x: (x.severity, x.id)):
+        severity_rank = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+        for f in sorted(open_findings, key=lambda x: (severity_rank.get(x.severity, 5), x.id)):
             lines.append(f"| {f.id} | {f.title} | {f.severity} | {f.effort} | {f.status} |")
 
         lines.extend([
@@ -478,9 +480,14 @@ class ArtifactPipeline:
         }
 
     def generate_patch_actions_json(self) -> dict[str, Any]:
-        """Return JSON Patch Actions payload matching patch-actions.schema.json."""
+        """Return JSON Patch Actions payload matching patch-actions.schema.json.
+
+        Only open findings receive remediation instructions; findings already
+        VERIFIED, REJECTED, or DEFERRED must not produce patch actions.
+        """
+        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         actions = []
-        for f in sorted(self.registry.findings.values(), key=lambda x: x.id):
+        for f in sorted(open_findings, key=lambda x: x.id):
             actions.append({
                 "finding_id": f.id,
                 "files": [f.affected_component],
@@ -518,9 +525,10 @@ class ArtifactPipeline:
         verification: list[str] = []
         for f in open_findings:
             verification.extend(f.validation)
+        severity_rank = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
         return {
             "title": f"Remediation Plan: {self.repo_name}",
-            "findings": [f.id for f in sorted(open_findings, key=lambda x: (x.severity, x.id))],
+            "findings": [f.id for f in sorted(open_findings, key=lambda x: (severity_rank.get(x.severity, 5), x.id))],
             "phases": phases,
             "patches": self.generate_patch_actions_json()["patch_actions"],
             "verification": verification

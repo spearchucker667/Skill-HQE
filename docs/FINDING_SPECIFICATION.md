@@ -42,13 +42,13 @@ confidence_levels:
     status_mapping: ["CONFIRMED"]
   INFERENCE:
     description: "Strong logical deduction based on control/data flow across multiple files."
-    status_mapping: ["STRONGLY_SUPPORTED", "INFERRED"]
+    status_mapping: ["OPEN", "CONFIRMED"]
   HYPOTHESIS:
     description: "Suspected issue requiring runtime validation, load testing, or external context."
-    status_mapping: ["SUSPECTED"]
+    status_mapping: ["OPEN"]
   NEEDS_VERIFICATION:
     description: "Issue that cannot be confirmed without explicit validation steps."
-    status_mapping: ["NEEDS_VERIFICATION"]
+    status_mapping: ["OPEN"]
 ```
 
 ---

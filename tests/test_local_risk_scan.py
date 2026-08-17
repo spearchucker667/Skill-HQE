@@ -8,6 +8,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from local_risk_scan import scan_local_risks
 
+# Runtime-constructed detection vector (see tests/test_redaction.py).
+AWS_KEY = "AKIA" + "1234567890ABCDEF"
+
 
 def test_scan_ungitignored_env():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -23,7 +26,7 @@ def test_scan_hardcoded_secret():
         root = Path(tmpdir)
         (root / ".gitignore").write_text(".env\n", encoding="utf-8")
         (root / "src").mkdir()
-        (root / "src" / "client.py").write_text('API_KEY = "AKIA1234567890ABCDEF"\n', encoding="utf-8")
+        (root / "src" / "client.py").write_text('API_KEY = "' + AWS_KEY + '"\n', encoding="utf-8")
         findings = scan_local_risks(root)
         types = [f["finding_type"] for f in findings]
         assert any("AWS_KEY" in t or "SECRET" in t for t in types)

@@ -232,7 +232,7 @@ To add custom validation rules, edit the `validate_yaml_semantics()` function in
 
 ## License
 
-MIT - Same as HQE Engineer Protocol
+Apache-2.0 - Same as HQE Engineer Protocol
 
 
 ## HQE Protocol v5.0.0 Updates

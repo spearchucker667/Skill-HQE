@@ -14,9 +14,17 @@ from runtime import TypedRedactionEngine, classify_secret
 from runtime.redaction_engine import redact_text
 from redact_secrets import redact_text as script_redact_text
 
+# Detection vectors are assembled at runtime from nonmatching fragments so the
+# repository itself never contains literal credential patterns. This keeps the
+# scanner test coverage intact while avoiding false positives in repository-wide
+# secret scanning (ours and GitHub's).
+AWS_KEY = "AKIA" + "1234567890ABCDEF"
+SLACK_TOKEN = "xox" + "b-1234567890-123456789012"
+GITHUB_TOKEN = "ghp_" + "123456789012345678901234567890123456"
+
 
 def test_redact_aws_key():
-    text = "Deploying with AKIA1234567890ABCDEF key"
+    text = "Deploying with " + AWS_KEY + " key"
     redacted, count = redact_text(text)
     assert "AKIA" not in redacted
     assert "REDACTED_AWS_ACCESS_KEY" in redacted
@@ -24,7 +32,7 @@ def test_redact_aws_key():
 
 
 def test_redact_github_token():
-    text = "Token: ghp_123456789012345678901234567890123456"
+    text = "Token: " + GITHUB_TOKEN
     redacted, count = redact_text(text)
     assert "ghp_" not in redacted
     assert "REDACTED_GITHUB_TOKEN" in redacted
@@ -32,7 +40,7 @@ def test_redact_github_token():
 
 
 def test_redact_slack_token():
-    text = "xoxb-1234567890-123456789012"
+    text = SLACK_TOKEN
     redacted, count = redact_text(text)
     assert "xoxb-" not in redacted
     assert "REDACTED_SLACK_TOKEN" in redacted
@@ -41,7 +49,7 @@ def test_redact_slack_token():
 
 def test_typed_engine_records_categories():
     engine = TypedRedactionEngine()
-    redacted = engine.redact("key=AKIA1234567890ABCDEF token=xoxb-1234567890-123456789012")
+    redacted = engine.redact("key=" + AWS_KEY + " token=" + SLACK_TOKEN)
     assert "AKIA" not in redacted
     assert "xoxb-" not in redacted
     summary = engine.typed_summary()
@@ -52,14 +60,14 @@ def test_typed_engine_records_categories():
 
 
 def test_classify_secret_categories():
-    assert classify_secret("AKIA1234567890ABCDEF") == "api_key"
-    assert classify_secret("xoxb-1234567890-123456789012") == "token"
+    assert classify_secret(AWS_KEY) == "api_key"
+    assert classify_secret(SLACK_TOKEN) == "token"
     assert classify_secret("postgres://user:pass@host/db") == "database_url"
 
 
 def test_script_wrapper_uses_runtime_engine():
     """The CLI wrapper must produce the same redacted output as the runtime engine."""
-    text = "key=AKIA1234567890ABCDEF"
+    text = "key=" + AWS_KEY
     runtime_redacted, runtime_count = redact_text(text)
     script_redacted, script_count = script_redact_text(text)
     assert runtime_redacted == script_redacted
@@ -75,7 +83,7 @@ def test_evidence_store_does_not_return_raw_secrets_on_redaction_failure(monkeyp
     monkeypatch.setattr("runtime.evidence_store.redact_text", broken_redact)
     store = EvidenceStore()
     with pytest.raises(RuntimeError, match="redactor unavailable"):
-        store.add_evidence(path="x.py", snippet="AKIA1234567890ABCDEF")
+        store.add_evidence(path="x.py", snippet=AWS_KEY)
 
 
 def test_record_tool_execution_redacts_on_failure(monkeypatch):
@@ -87,4 +95,4 @@ def test_record_tool_execution_redacts_on_failure(monkeypatch):
     monkeypatch.setattr("runtime.evidence_store.redact_text", broken_redact)
     store = EvidenceStore()
     with pytest.raises(RuntimeError, match="redactor unavailable"):
-        store.record_tool_execution("pytest", "pytest", 0, stdout="xoxb-1234567890-123456789012")
+        store.record_tool_execution("pytest", "pytest", 0, stdout=SLACK_TOKEN)

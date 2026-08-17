@@ -131,8 +131,10 @@ def test_report_json_empty_registry():
 
     assert data["executive_summary"]["critical_count"] == 0
     assert data["executive_summary"]["high_count"] == 0
-    assert data["health_score"]["score"] == 10
-    assert data["health_score"]["band"] == "Production-ready"
+    # An empty audit with unknown coverage must not claim a false-perfect score.
+    assert data["health_score"]["omitted"] is True
+    assert data["health_score"]["score"] is None
+    assert data["health_score"]["band"] == "Unknown"
     assert len(data["findings"]) == 0
 
 

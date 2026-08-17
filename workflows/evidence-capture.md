@@ -141,7 +141,7 @@ Flag the issue as `STOP-THE-LINE: [issue]` and do not finalize the finding until
    - `[INFERENCE]` for strongly supported conclusions.
    - `[HYPOTHESIS]` for suspected but unverified claims.
    - `[NEEDS_VERIFICATION]` when evidence is incomplete.
-3. Ensure the finding's `status` reflects the evidence state (`CONFIRMED`, `STRONGLY_SUPPORTED`, `SUSPECTED`, etc.).
+3. Ensure the finding's `status` reflects the evidence state (`OPEN`, `CONFIRMED`, `FIX_IN_PROGRESS`, `VERIFIED`, `REJECTED`, `DEFERRED`).
 4. Validate the resulting finding against `schemas/finding.schema.json`.
 
 **Evidence to collect**:

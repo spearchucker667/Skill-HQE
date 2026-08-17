@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Check protocol synchronization and SHA-256 integrity across Skill-HQE."""
+"""Check protocol synchronization and SHA-256 integrity across Skill-HQE.
+
+The canonical protocol lives in ``protocol/`` and ``protocol/SOURCE_CHECKSUMS.sha256``
+is the recorded set of canonical hashes.  This check establishes synchronization
+by requiring every required protocol file to exist, have a recorded hash, and
+match that hash exactly.  A missing checksum file is a hard failure rather than
+a vacuously passing check.
+"""
 
 from __future__ import annotations
 
@@ -27,38 +34,38 @@ def compute_sha256(file_path: Path) -> str:
 
 
 def check_sync(root_path: Path) -> list[str]:
-    """Verify synchronization between protocol/ and package canonical-protocol/."""
+    """Verify protocol/ matches the canonical hashes recorded in SOURCE_CHECKSUMS.sha256."""
     root = root_path.resolve()
     errors: list[str] = []
 
     protocol_dir = root / "protocol"
-    pkg_canonical = root / "HQE_PROTOCOL_SKILL_EMBED_PACKAGE" / "canonical-protocol"
-
     if not protocol_dir.is_dir():
         return [f"protocol/ directory missing at {protocol_dir}"]
 
-    # 1. Check integrity against protocol/SOURCE_CHECKSUMS.sha256
+    # Check integrity against protocol/SOURCE_CHECKSUMS.sha256
     checksum_file = protocol_dir / "SOURCE_CHECKSUMS.sha256"
-    if checksum_file.is_file():
-        expected_hashes: dict[str, str] = {}
-        for line in checksum_file.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line and not line.startswith("#"):
-                parts = line.split()
-                if len(parts) >= 2:
-                    expected_hashes[parts[1].strip()] = parts[0].strip()
+    if not checksum_file.is_file():
+        return [f"Missing canonical checksum file: protocol/SOURCE_CHECKSUMS.sha256"]
 
-        for filename in REQUIRED_PROTOCOL_FILES:
-            target_file = protocol_dir / filename
-            if not target_file.is_file():
-                errors.append(f"Missing protocol file: protocol/{filename}")
-                continue
-            actual_hash = compute_sha256(target_file)
-            if filename in expected_hashes:
-                if actual_hash != expected_hashes[filename]:
-                    errors.append(f"Checksum mismatch for protocol/{filename}: expected {expected_hashes[filename]}, got {actual_hash}")
-            else:
-                errors.append(f"Missing expected hash in SOURCE_CHECKSUMS.sha256 for protocol/{filename}")
+    expected_hashes: dict[str, str] = {}
+    for line in checksum_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            parts = line.split()
+            if len(parts) >= 2:
+                expected_hashes[parts[1].strip()] = parts[0].strip()
+
+    for filename in REQUIRED_PROTOCOL_FILES:
+        target_file = protocol_dir / filename
+        if not target_file.is_file():
+            errors.append(f"Missing protocol file: protocol/{filename}")
+            continue
+        actual_hash = compute_sha256(target_file)
+        if filename in expected_hashes:
+            if actual_hash != expected_hashes[filename]:
+                errors.append(f"Checksum mismatch for protocol/{filename}: expected {expected_hashes[filename]}, got {actual_hash}")
+        else:
+            errors.append(f"Missing expected hash in SOURCE_CHECKSUMS.sha256 for protocol/{filename}")
 
     return errors
 
@@ -75,7 +82,7 @@ def main() -> int:
             print(f"  - {err}", file=sys.stderr)
         return 1
 
-    print("Protocol sync check PASSED: protocol/ matches canonical source checksums.")
+    print("Protocol sync check PASSED: protocol/ files match the canonical SOURCE_CHECKSUMS.sha256 hashes.")
     return 0
 
 

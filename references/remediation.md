@@ -11,5 +11,5 @@ When asked to remediate or fix issues (`/HQE remediate`), you must follow a disc
 6. **Test**: Add or update tests to provide regression coverage.
 7. **Verify**: Run targeted validation, then broader validation (e.g., test suite, build).
 8. **Inspect**: Inspect the final diff.
-9. **Update**: Update the finding status (e.g., to `FIXED`).
+9. **Update**: Update the finding status (e.g., to `VERIFIED` once validation passes).
 10. **Report**: Report unresolved issues or failed validations. Do not hide test failures. If a failure is pre-existing, provide evidence.

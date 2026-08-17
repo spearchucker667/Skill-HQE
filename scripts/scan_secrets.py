@@ -3,12 +3,17 @@
 
 Reports potential secrets as ``path:line:TYPE`` without printing the secret
 itself, so CI logs do not leak credentials.  Supports path-based allowlists for
-test fixtures and documentation examples.
+documentation examples and audited fixtures.
+
+Allowlist entries are repository-relative paths.  A trailing slash marks a
+directory prefix (``tests/`` matches everything under ``tests/``); entries may
+also use glob patterns (``**/*.example.env``).  Exact path matches are honored.
 """
 
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import mimetypes
 import re
 import sys
@@ -32,21 +37,6 @@ PATTERNS = [
     ("GOOGLE_API_KEY", re.compile(r"AIza[0-9A-Za-z_-]{35}")),
     ("OPENAI_API_KEY", re.compile(r"sk-[a-zA-Z0-9]{32,}")),
 ]
-
-# Standard dummy/fake tokens explicitly used in unit tests.
-# These use non-matching formats to avoid GitHub secret scanning false positives.
-# They are intentionally NOT real secret formats.
-KNOWN_TEST_TOKENS = {
-    "FAKE_TOKEN_SLACK_1",
-    "FAKE_TOKEN_SLACK_2",
-    "FAKE_TOKEN_GITHUB_1",
-    "FAKE_TOKEN_GITHUB_2",
-    "FAKE_TOKEN_AWS_1",
-    "FAKE_TOKEN_AWS_2",
-    "FAKE_TOKEN_OPENAI_1",
-    "FAKE_TOKEN_OPENAI_2",
-    "FAKE_TOKEN_GOOGLE_1",
-}
 
 DEFAULT_SKIP_DIRS = {
     ".git",
@@ -97,15 +87,26 @@ def _load_allowlist(allowlist_path: Path | None) -> list[str]:
 
 
 def _is_allowed(path: Path, repo_root: Path, allowlist: list[str]) -> bool:
-    """Return True if a path matches an allowlist entry."""
+    """Return True if a repo-relative path matches an allowlist entry.
+
+    Matching semantics, in order:
+    - exact match against the normalized repo-relative path;
+    - directory prefix: an entry ending in ``/`` matches the directory itself
+      and every path beneath it;
+    - glob pattern match via :func:`fnmatch.fnmatch` against the full path.
+    """
     try:
         rel = path.relative_to(repo_root)
     except ValueError:
-        rel = path
+        return False
     rel_str = str(rel).replace("\\", "/")
     for entry in allowlist:
         entry = entry.replace("\\", "/")
-        if rel_str == entry or rel_str.endswith(entry):
+        if rel_str == entry:
+            return True
+        if entry.endswith("/") and (rel_str == entry.rstrip("/") or rel_str.startswith(entry)):
+            return True
+        if fnmatch.fnmatch(rel_str, entry):
             return True
     return False
 
@@ -126,8 +127,6 @@ def scan_file(file_path: Path) -> list[tuple[int, str]]:
             found = pattern.search(line)
             if found:
                 matched_str = found.group(0)
-                if matched_str in KNOWN_TEST_TOKENS:
-                    continue
                 if f"REDACTED_{matched_str}" in line or f"REDACTED_{secret_type}" in line:
                     continue
                 matches.append((line_no, secret_type))

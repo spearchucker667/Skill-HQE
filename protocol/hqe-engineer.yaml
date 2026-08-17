@@ -1,7 +1,7 @@
 schema_version: 5.0.0
 protocol_version: 5.0.0
 last_updated: '2026-08-17'
-license: MIT
+license: Apache-2.0
 maintainer: Faye Håkansdotter
 contact: 2-craze-headmen@icloud.com
 meta:
@@ -1260,7 +1260,7 @@ changelog:
 metadata:
   designed_by: Faye Håkansdotter
   contact: 2-craze-headmen@icloud.com
-  license: MIT
+  license: Apache-2.0
   repository: https://github.com/faye/hqe-workbench
 control_plane_requirements:
   health_scoring: true

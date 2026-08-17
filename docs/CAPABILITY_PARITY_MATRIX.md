@@ -92,7 +92,7 @@
 | **Patch Action** | ✅ Complete | Template, schema, pipeline emission, and JSON artifact present. | None. |
 | **Remediation Plan** | ✅ Complete | Template, schema, pipeline emission, and JSON artifact present. | None. |
 | **Validation Report** | ✅ Complete | Template, schema, pipeline emission, and JSON artifact present. | None. |
-| **Incident Mini-Report** | ✅ Complete | Template, pipeline emission, and incident criteria tests present. Active SEC CRITICAL/HIGH (not FIXED) are reported. Tests: `tests/test_artifact_truthfulness.py`. | None. |
+| **Incident Mini-Report** | ✅ Complete | Template, pipeline emission, and incident criteria tests present. Active SEC CRITICAL/HIGH (not VERIFIED/REJECTED/DEFERRED) are reported. Tests: `tests/test_artifact_truthfulness.py`. | None. |
 
 ---
 

@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from pathlib import Path
+from typing import Any
 
 from .evidence_store import CodeEvidence
 from .health_scoring import HealthScore, compute_health_score
+
+_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "finding.schema.json"
 
 ID_RE = re.compile(r"^HQE-(BOOT|SEC|BUG|REL|PERF|UX|DX|DOC|DEBT|DEPS)-[0-9]{3,}$")
 
@@ -82,6 +86,8 @@ class Finding:
             errors.append(f"Invalid status: '{self.status}'")
         if self.effort not in VALID_EFFORTS:
             errors.append(f"Invalid effort tier: '{self.effort}'")
+        if self.regression_risk not in ("Low", "Medium", "High"):
+            errors.append(f"Invalid regression_risk: '{self.regression_risk}' (expected Low, Medium, or High)")
 
         if not self.evidence:
             errors.append(f"Finding '{self.id}' must have at least one evidence item")
@@ -146,11 +152,37 @@ class Finding:
             data["exposure_evidence"] = self.exposure_evidence
         if self.taint_chain:
             data["taint_chain"] = self.taint_chain
-        if self.validation:
-            data["validation"] = self.validation
-        if self.related_findings:
-            data["related_findings"] = self.related_findings
+        # Schema-total serialization: finding.schema.json requires these keys, so
+        # always emit them even when empty rather than conditioning on truthiness.
+        data["validation"] = list(self.validation)
+        data["related_findings"] = list(self.related_findings)
         return data
+
+
+def _schema_validation_errors(finding: "Finding") -> list[str]:
+    """Validate the serialized finding against ``schemas/finding.schema.json``.
+
+    Returns an empty list when jsonschema or the schema file is unavailable so
+    that semantic validation remains the fallback boundary. When present, the
+    JSON Schema is the canonical contract: registration and update must reject
+    findings the schema would reject.
+    """
+    try:
+        from jsonschema import validate as jsonschema_validate
+        from jsonschema.exceptions import ValidationError
+    except ImportError:
+        return []
+    if not _SCHEMA_PATH.is_file():
+        return []
+    try:
+        schema = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
+        jsonschema_validate(instance=finding.to_dict(), schema=schema)
+    except ValidationError as exc:
+        loc = "/".join(str(part) for part in exc.path) or "<root>"
+        return [f"schema violation at {loc}: {exc.message}"]
+    except Exception:
+        return []
+    return []
 
 
 class FindingRegistry:
@@ -180,6 +212,7 @@ class FindingRegistry:
         if finding.id in self.findings:
             raise ValueError(f"Finding '{finding.id}' is already registered")
         errors = finding.validate()
+        errors.extend(_schema_validation_errors(finding))
         if errors:
             raise ValueError(f"Finding validation failed for {finding.id}:\n" + "\n".join(f" - {e}" for e in errors))
         self.findings[finding.id] = finding
@@ -216,6 +249,7 @@ class FindingRegistry:
 
         # Validate all invariants after mutation
         errors = finding.validate()
+        errors.extend(_schema_validation_errors(finding))
         if errors:
             for key, orig_val in backup.items():
                 setattr(finding, key, orig_val)
@@ -232,8 +266,12 @@ class FindingRegistry:
         if not target or not source:
             raise KeyError("Both target and source findings must exist")
         target.evidence.extend(source.evidence)
-        target.validation = list(set(target.validation + source.validation))
-        target.related_findings = list(set(target.related_findings + [source_id] + source.related_findings))
+        # Ordered deduplication: list(set(...)) ordering is not deterministic
+        # across processes and would undermine artifact-stability guarantees.
+        target.validation = list(dict.fromkeys(target.validation + source.validation))
+        target.related_findings = list(
+            dict.fromkeys(target.related_findings + [source_id] + source.related_findings)
+        )
         self.supersede(source_id, target_id, reason=f"merged into {target_id}")
         return target
 

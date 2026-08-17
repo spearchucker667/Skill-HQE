@@ -1,5 +1,7 @@
 # Skill-HQE Development & Testing Dependencies
-pytest>=8.0.0
-jsonschema>=4.20.0
-referencing>=0.30.0
-PyYAML>=6.0.0
+# Pinned to exact versions so CI resolution is deterministic: a future release
+# cannot change CI behavior without an explicit repository commit.
+pytest==9.0.3
+jsonschema==4.26.0
+referencing==0.37.0
+PyYAML==6.0.3

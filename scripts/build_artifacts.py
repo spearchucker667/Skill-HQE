@@ -84,8 +84,14 @@ def main() -> int:
     session = None
     if args.session_file:
         s_path = Path(args.session_file).resolve()
-        if s_path.is_file():
-            session = SessionManager(repo_path=str(ROOT_DIR))
+        if not s_path.is_file():
+            print(f"Error: session file not found: {s_path}", file=sys.stderr)
+            return 1
+        try:
+            session = SessionManager.load_from_file(s_path)
+        except Exception as exc:
+            print(f"Error: Failed to load session file {s_path}: {exc}", file=sys.stderr)
+            return 1
 
     pipeline = ArtifactPipeline(registry, session=session, repo_name=args.repo_name)
     generated = pipeline.build_all_artifacts(output_dir=args.output_dir)

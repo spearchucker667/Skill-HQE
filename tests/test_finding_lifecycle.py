@@ -53,46 +53,53 @@ def test_explicit_update_works():
 
 def test_invalid_status_transition_rejected():
     registry = FindingRegistry()
-    f = _make_finding("HQE-BUG-001", status="FIXED")
+    f = _make_finding("HQE-BUG-001", status="OPEN")
     registry.register(f)
-    with pytest.raises(ValueError, match="invalid transition"):
+    # Unknown statuses are rejected outright.
+    with pytest.raises(ValueError, match="Invalid finding status"):
         registry.transition_status("HQE-BUG-001", "SUSPECTED")
+    # Transitions not present in the v5 transition graph are rejected.
+    with pytest.raises(ValueError, match="invalid transition"):
+        registry.transition_status("HQE-BUG-001", "VERIFIED")
 
 
 def test_valid_status_transition_accepted():
     registry = FindingRegistry()
     f = _make_finding("HQE-BUG-001", status="CONFIRMED")
     registry.register(f)
-    registry.transition_status("HQE-BUG-001", "FIXED", verification_evidence=["pytest test_bug"])
-    assert registry.get("HQE-BUG-001").status == "FIXED"
+    registry.transition_status("HQE-BUG-001", "VERIFIED", verification_evidence=["pytest test_bug"])
+    assert registry.get("HQE-BUG-001").status == "VERIFIED"
 
 
-def test_fixed_requires_verification_evidence():
+def test_verified_requires_verification_evidence():
     registry = FindingRegistry()
     f = _make_finding("HQE-BUG-001", status="CONFIRMED")
     registry.register(f)
     with pytest.raises(ValueError, match="verification evidence"):
-        registry.transition_status("HQE-BUG-001", "FIXED")
+        registry.transition_status("HQE-BUG-001", "VERIFIED")
 
 
-def test_supersede_preserves_history():
+def test_supersede_preserves_history_and_successor():
     registry = FindingRegistry()
     f1 = _make_finding("HQE-BUG-001", status="CONFIRMED")
     registry.register(f1)
     f2 = _make_finding("HQE-BUG-002", status="CONFIRMED")
     registry.register(f2)
     registry.supersede("HQE-BUG-001", "HQE-BUG-002", reason="consolidated")
-    assert registry.get("HQE-BUG-001").status == "SUPERSEDED"
+    assert registry.get("HQE-BUG-001").status == "DEFERRED"
+    # Successor relationship is recorded on the deferred finding.
+    assert "HQE-BUG-002" in registry.get("HQE-BUG-001").related_findings
     history = registry.get_history("HQE-BUG-001")
-    assert any(entry["to_status"] == "SUPERSEDED" for entry in history)
+    assert any(entry["to_status"] == "DEFERRED" for entry in history)
+    assert any(entry.get("reason") == "consolidated" for entry in history)
 
 
-def test_reopen_fixed_requires_reason():
+def test_reopen_verified_requires_reason():
     registry = FindingRegistry()
     f = _make_finding("HQE-BUG-001", status="CONFIRMED")
     registry.register(f)
-    registry.transition_status("HQE-BUG-001", "FIXED", verification_evidence=["pytest"])
+    registry.transition_status("HQE-BUG-001", "VERIFIED", verification_evidence=["pytest"])
     with pytest.raises(ValueError, match="reason"):
-        registry.transition_status("HQE-BUG-001", "REOPENED")
-    registry.transition_status("HQE-BUG-001", "REOPENED", reason="regression observed")
-    assert registry.get("HQE-BUG-001").status == "REOPENED"
+        registry.transition_status("HQE-BUG-001", "OPEN")
+    registry.transition_status("HQE-BUG-001", "OPEN", reason="regression observed")
+    assert registry.get("HQE-BUG-001").status == "OPEN"

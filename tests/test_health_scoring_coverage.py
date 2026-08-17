@@ -90,11 +90,13 @@ def test_score_from_findings_empty_is_perfect():
 
 
 def test_score_to_band_mappings():
-    assert score_to_band(10) == "Exceptional"
+    # Bands follow the canonical v5 rubric: 9-10 Production-ready, 7-8 Solid,
+    # 5-6 Fragile, 3-4 Unstable, 1-2 Broken.
+    assert score_to_band(10) == "Production-ready"
     assert score_to_band(8) == "Solid"
-    assert score_to_band(6) == "Adequate"
-    assert score_to_band(4) == "Concerning"
-    assert score_to_band(2) == "Critical Risk"
+    assert score_to_band(6) == "Fragile"
+    assert score_to_band(4) == "Unstable"
+    assert score_to_band(2) == "Broken"
 
 
 def test_compute_health_score_returns_health_score_dataclass():

@@ -54,7 +54,7 @@ sm.save_session_log("HQE_SESSION_LOG.json")
 
 ### 2.2 `finding_registry.py` (Finding State Machine & Severity Gates)
 Maintains finding invariants and lifecycle transitions:
-- **Lifecycle States**: `CONFIRMED`, `STRONGLY_SUPPORTED`, `SUSPECTED`, `NOT_REPRODUCED`, `FIXED`, `REOPENED`, `SUPERSEDED`.
+- **Lifecycle States**: `OPEN`, `CONFIRMED`, `FIX_IN_PROGRESS`, `VERIFIED`, `REJECTED`, `DEFERRED`.
 - **Severity Gating**: Rejects `CRITICAL` or `HIGH` findings if `preconditions`, `exploitability`, `blast_radius`, `likelihood`, or `exposure_evidence` are missing.
 
 ```python

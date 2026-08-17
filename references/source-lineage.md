@@ -1,7 +1,7 @@
 # Source Lineage & Licensing Provenance
 
 **Protocol Authority**: HQE Engineer Protocol v5.0.0 (`protocol/hqe-engineer.yaml`)  
-**License**: Apache-2.0 (Framework) / MIT (Protocol Metadata)
+**License**: Apache-2.0 (Framework and Protocol Metadata)
 
 ---
 
@@ -17,7 +17,7 @@ While `HQE-Workbench` implemented this methodology as a monolithic Tauri/Rust de
 
 | Skill-HQE Component | Origin in HQE-Workbench | License | Notes |
 | :--- | :--- | :--- | :--- |
-| `protocol/hqe-engineer.yaml` | `protocol/hqe-engineer.yaml` | MIT / Apache-2.0 | Canonical machine-readable protocol definition (v5.0.0) |
+| `protocol/hqe-engineer.yaml` | `protocol/hqe-engineer.yaml` | Apache-2.0 | Canonical machine-readable protocol definition (v5.0.0) |
 | `protocol/hqe-engineer-schema.json` | `protocol/hqe-engineer-schema.json` | Apache-2.0 | JSON Schema Draft 2020-12 validator contract |
 | `protocol/validate.py` | `protocol/validate.py` | Apache-2.0 | Canonical protocol validation script |
 | `protocol/verify.py` | `protocol/verify.py` | Apache-2.0 | Standalone verbose protocol verifier |

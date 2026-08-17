@@ -32,7 +32,8 @@ class SessionManager:
         self.completed: list[str] = []
         self.in_progress: list[str] = []
         self.discovered: list[str] = []
-        self.reprioritized: list[dict[str, Any]] = []
+        # session-log.schema.json requires an array of strings.
+        self.reprioritized: list[str] = []
         self.next_session: list[str] = []
         self.events: list[dict[str, Any]] = []
 
@@ -85,6 +86,7 @@ class SessionManager:
             "session_id": self.session_id,
             "started_at": self.started_at,
             "repository_path": self.repository_path,
+            "state": self.state.value,
             "completed": list(self.completed),
             "in_progress": list(self.in_progress),
             "discovered": list(self.discovered),
@@ -95,6 +97,44 @@ class SessionManager:
         if self.ended_at:
             data["ended_at"] = self.ended_at
         return data
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SessionManager":
+        """Rebuild a SessionManager from a serialized session log dict.
+
+        Restores run/session identity, timestamps, repository path, lifecycle
+        state, and progress lists so saved sessions remain continuous.
+        """
+        session = cls(
+            session_id=data.get("session_id"),
+            repo_path=data.get("repository_path", "."),
+        )
+        if data.get("started_at"):
+            session.started_at = data["started_at"]
+        session.ended_at = data.get("ended_at")
+        state = data.get("state")
+        if state:
+            try:
+                session.state = SessionState(state)
+            except ValueError:
+                session.log_event("WARN", f"Unknown serialized state {state!r}; kept {session.state.value}")
+        session.completed = list(data.get("completed", []))
+        session.in_progress = list(data.get("in_progress", []))
+        session.discovered = list(data.get("discovered", []))
+        reprioritized = data.get("reprioritized", [])
+        session.reprioritized = [str(item) for item in reprioritized]
+        session.next_session = list(data.get("next_session", []))
+        session.events = list(data.get("events", []))
+        return session
+
+    @classmethod
+    def load_from_file(cls, path: Path | str) -> "SessionManager":
+        """Load a serialized session log from disk."""
+        with Path(path).open("r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if not isinstance(data, dict):
+            raise ValueError("Session log must be a JSON object")
+        return cls.from_dict(data)
 
     def save_to_file(self, target_path: Path | str = "HQE_SESSION_LOG.json") -> Path:
         out_path = Path(target_path).resolve()

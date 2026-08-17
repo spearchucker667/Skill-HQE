@@ -6,13 +6,20 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Validation-only workflow: the default GITHUB_TOKEN needs repository read
+# access and nothing else.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate Skill Integrity, Protocol & Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Check for Repository Pollution
         run: |
@@ -22,7 +29,7 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -47,6 +54,7 @@ jobs:
           pytest -v
 
       - name: Validate Findings Schemas & Semantics
+        if: always()
         run: |
           python scripts/validate_findings.py tests/fixtures/sample_finding_valid.json
           python scripts/validate_semantics.py tests/fixtures/sample_finding_valid.json
@@ -54,6 +62,7 @@ jobs:
           python scripts/validate_session_log.py tests/fixtures/sample_session_log.json
 
       - name: Git Clean Validation
+        if: always()
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "Repository is dirty or contains untracked files after CI execution."
