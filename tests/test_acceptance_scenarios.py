@@ -68,3 +68,23 @@ def test_scenario_large_repo_triage():
     assert inv["total_files"] >= 50
     # Large repo triggers Phase 0.5 triage mode
     assert inv["total_files"] > 50
+
+
+def test_scenario_broken_ci():
+    ci_dir = FIXTURES / "broken_ci"
+    inv = inventory_repository(ci_dir)
+    assert inv["total_files"] >= 1
+    ci_file = ci_dir / ".github" / "workflows" / "broken.yml"
+    assert ci_file.is_file()
+    content = ci_file.read_text(encoding="utf-8")
+    assert "permissions: write-all" in content
+    assert "actions/checkout@v1" in content
+
+
+def test_scenario_dirty_repo():
+    dirty_dir = FIXTURES / "dirty_repo"
+    inv = inventory_repository(dirty_dir)
+    assert inv["total_files"] >= 1
+    app_file = dirty_dir / "app.py"
+    assert app_file.is_file()
+
