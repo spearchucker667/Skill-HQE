@@ -45,10 +45,10 @@ def validate_finding_semantics(finding: dict, index: int) -> list[str]:
                 errors.append(f"{prefix}: Severity is {severity} but severity-gate field '{field}' is empty collection")
 
     # 3. Taint Chain for Security Findings
-    if category == "SEC" and severity in ("CRITICAL", "HIGH"):
+    if category == "SEC":
         taint = finding.get("taint_chain")
         if not isinstance(taint, dict):
-            errors.append(f"{prefix}: Security finding with {severity} severity must include structured 'taint_chain' object")
+            errors.append(f"{prefix}: Security finding must include structured 'taint_chain' object")
         else:
             for required_step in ("source", "transforms", "validation_boundary", "sink", "impact"):
                 if not taint.get(required_step):

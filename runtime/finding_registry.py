@@ -15,21 +15,19 @@ VALID_CATEGORIES = {"BOOT", "SEC", "BUG", "REL", "PERF", "UX", "DX", "DOC", "DEB
 VALID_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}
 VALID_CONFIDENCE = {"FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION"}
 VALID_STATUSES = {
-    "CONFIRMED", "STRONGLY_SUPPORTED", "SUSPECTED",
-    "NOT_REPRODUCED", "FIXED", "REOPENED", "SUPERSEDED"
+    "OPEN", "CONFIRMED", "FIX_IN_PROGRESS",
+    "VERIFIED", "REJECTED", "DEFERRED"
 }
 VALID_EFFORTS = {"S", "M", "L"}
 
-# HQE v5 lifecycle transition graph. Terminal states have no outbound edges
-# unless explicitly reopened/superseded through dedicated APIs.
+# Canonical HQE Protocol lifecycle transition graph.
 TRANSITION_GRAPH: dict[str, set[str]] = {
-    "SUSPECTED": {"STRONGLY_SUPPORTED", "CONFIRMED", "NOT_REPRODUCED"},
-    "STRONGLY_SUPPORTED": {"CONFIRMED", "SUSPECTED", "NOT_REPRODUCED"},
-    "NOT_REPRODUCED": {"SUSPECTED", "STRONGLY_SUPPORTED"},
-    "CONFIRMED": {"FIXED", "SUPERSEDED"},
-    "FIXED": {"REOPENED"},
-    "REOPENED": {"CONFIRMED", "FIXED"},
-    "SUPERSEDED": set(),
+    "OPEN": {"CONFIRMED", "FIX_IN_PROGRESS", "REJECTED", "DEFERRED"},
+    "CONFIRMED": {"FIX_IN_PROGRESS", "VERIFIED", "REJECTED", "DEFERRED"},
+    "FIX_IN_PROGRESS": {"VERIFIED", "OPEN", "CONFIRMED", "DEFERRED"},
+    "VERIFIED": {"OPEN"},
+    "REJECTED": {"OPEN"},
+    "DEFERRED": {"OPEN", "CONFIRMED", "FIX_IN_PROGRESS"},
 }
 
 
@@ -104,9 +102,9 @@ class Finding:
                 errors.append(f"Severity is {self.severity} but 'exposure_evidence' is missing")
 
         # Taint Chain for SEC
-        if self.category == "SEC" and self.severity in ("CRITICAL", "HIGH"):
+        if self.category == "SEC":
             if not self.taint_chain or not isinstance(self.taint_chain, dict):
-                errors.append(f"Security finding with {self.severity} severity must include 'taint_chain'")
+                errors.append(f"Security finding must include 'taint_chain'")
             else:
                 for k in ("source", "transforms", "validation_boundary", "sink", "impact"):
                     if not self.taint_chain.get(k):
@@ -193,14 +191,38 @@ class FindingRegistry:
         return list(self._history.get(finding_id, []))
 
     def update(self, finding_id: str, **kwargs: Any) -> Finding:
-        """Explicitly update mutable fields of a registered finding."""
+        """Explicitly update mutable fields of a registered finding while enforcing invariants."""
         finding = self.findings.get(finding_id)
         if not finding:
             raise KeyError(f"Finding '{finding_id}' not found in registry")
+
+        # Snapshot attributes for atomic rollback on validation failure
+        backup = {k: getattr(finding, k) for k in kwargs if hasattr(finding, k)}
+
+        # Status changes MUST follow lifecycle transition rules
+        if "status" in kwargs:
+            new_status = kwargs["status"]
+            if new_status != finding.status:
+                allowed = TRANSITION_GRAPH.get(finding.status, set())
+                if new_status not in allowed:
+                    raise ValueError(f"invalid transition from '{finding.status}' to '{new_status}'")
+                if new_status == "VERIFIED" and not finding.validation and not kwargs.get("validation"):
+                    raise ValueError("VERIFIED status requires verification evidence or validation commands")
+
         for key, value in kwargs.items():
             if not hasattr(finding, key):
                 raise ValueError(f"Finding has no attribute '{key}'")
             setattr(finding, key, value)
+
+        # Validate all invariants after mutation
+        errors = finding.validate()
+        if errors:
+            for key, orig_val in backup.items():
+                setattr(finding, key, orig_val)
+            raise ValueError(
+                f"Finding update invalid for {finding_id}:\n" + "\n".join(f" - {e}" for e in errors)
+            )
+
         return finding
 
     def merge(self, target_id: str, source_id: str) -> Finding:
@@ -216,7 +238,7 @@ class FindingRegistry:
         return target
 
     def supersede(self, finding_id: str, successor_id: str, reason: str | None = None) -> Finding:
-        """Mark a finding as superseded by another finding."""
+        """Mark a finding as superseded/deferred in favor of another finding."""
         finding = self.findings.get(finding_id)
         successor = self.findings.get(successor_id)
         if not finding:
@@ -224,9 +246,11 @@ class FindingRegistry:
         if not successor:
             raise KeyError(f"Successor finding '{successor_id}' not found in registry")
         old_status = finding.status
-        finding.status = "SUPERSEDED"
-        finding.related_findings.append(successor_id)
-        self._record_transition(finding_id, old_status, "SUPERSEDED", reason=reason)
+        if "DEFERRED" in TRANSITION_GRAPH.get(old_status, set()):
+            finding.status = "DEFERRED"
+            self._record_transition(finding_id, old_status, "DEFERRED", reason=reason or f"superseded by {successor_id}")
+        if successor_id not in finding.related_findings:
+            finding.related_findings.append(successor_id)
         return finding
 
     def transition_status(
@@ -239,7 +263,7 @@ class FindingRegistry:
     ) -> Finding:
         """Update finding status with a valid lifecycle transition.
 
-        FIXED requires verification evidence. REOPENED requires a reason.
+        VERIFIED requires verification evidence. Reopening/deferring/rejecting requires a reason.
         """
         if new_status not in VALID_STATUSES:
             raise ValueError(f"Invalid finding status '{new_status}'")
@@ -254,11 +278,11 @@ class FindingRegistry:
                 f"invalid transition from '{current}' to '{new_status}'"
             )
 
-        if new_status == "FIXED" and not verification_evidence:
-            raise ValueError("FIXED transition requires verification evidence")
+        if new_status == "VERIFIED" and not verification_evidence:
+            raise ValueError("VERIFIED transition requires verification evidence")
 
-        if new_status == "REOPENED" and not reason:
-            raise ValueError("REOPENED transition requires a reason")
+        if (new_status in ("REJECTED", "DEFERRED") or (current == "VERIFIED" and new_status == "OPEN")) and not reason:
+            raise ValueError(f"{new_status} transition requires a reason")
 
         finding.status = new_status
         self._record_transition(

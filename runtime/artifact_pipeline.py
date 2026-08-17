@@ -15,23 +15,27 @@ from .redaction_engine import TypedRedactionEngine
 from .session_manager import SessionManager
 
 _PROTOCOL_YAML = Path(__file__).resolve().parents[1] / "protocol" / "hqe-engineer.yaml"
+_SCHEMAS_DIR = Path(__file__).resolve().parents[1] / "schemas"
 
 
 def _derive_protocol_version() -> str:
     """Read the canonical protocol version from the HQE protocol YAML."""
     try:
         data = yaml.safe_load(_PROTOCOL_YAML.read_text(encoding="utf-8"))
-        version = data.get("protocol_version") or data.get("schema_version")
-        if version:
-            return str(version)
+        if isinstance(data, dict):
+            version = data.get("protocol_version") or data.get("schema_version")
+            if version:
+                return str(version)
     except Exception:
         pass
-    return "5.0.0"
+    return "unknown"
 
 
 def _score_to_report_band(score: int | None) -> str:
     """Map internal health score band to report.schema.json enum values."""
-    if score is None or score >= 9:
+    if score is None:
+        return "Unknown"
+    if score >= 9:
         return "Production-ready"
     if score >= 7:
         return "Solid"
@@ -40,6 +44,30 @@ def _score_to_report_band(score: int | None) -> str:
     if score >= 3:
         return "Unstable"
     return "Broken"
+
+
+def _validate_json_artifact(data: dict[str, Any], schema_name: str) -> None:
+    """Validate artifact payload against canonical schemas in schemas/ directory."""
+    try:
+        from jsonschema import validate as jsonschema_validate
+        from referencing import Registry, Resource
+    except ImportError:
+        return
+
+    schema_path = _SCHEMAS_DIR / schema_name
+    if not schema_path.is_file():
+        return
+
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    reg = Registry()
+    for ref_schema_file in _SCHEMAS_DIR.glob("*.schema.json"):
+        try:
+            ref_data = json.loads(ref_schema_file.read_text(encoding="utf-8"))
+            reg = reg.with_resource(ref_schema_file.name, Resource.from_contents(ref_data))
+        except Exception:
+            pass
+
+    jsonschema_validate(instance=data, schema=schema, registry=reg)
 
 
 class ArtifactPipeline:
@@ -245,7 +273,7 @@ class ArtifactPipeline:
         """Assemble Incident Mini-Report for active security incidents."""
         sec_incidents = [
             f for f in self.registry.findings.values()
-            if f.category == "SEC" and f.severity in ("CRITICAL", "HIGH") and f.status != "FIXED"
+            if f.category == "SEC" and f.severity in ("CRITICAL", "HIGH") and f.status not in ("VERIFIED", "REJECTED", "DEFERRED")
         ]
         lines = [
             f"# Incident Mini-Report: {self.repo_name}",
@@ -267,7 +295,7 @@ class ArtifactPipeline:
             lines.append(f"- **Containment:** {f.remediation}")
             lines.append(f"- **Safe verification:** {f.validation or 'See remediation plan'}")
             lines.append(f"- **Blockers:** {f.reproduction or 'None documented'}")
-            lines.append(f"- **Resume criteria:** Verification commands pass and findings transition to FIXED")
+            lines.append(f"- **Resume criteria:** Verification commands pass and findings transition to VERIFIED")
             lines.append("")
         return "\n".join(lines) + "\n"
 
@@ -288,14 +316,14 @@ class ArtifactPipeline:
             lines.append("# TODO: append minimal diff once change is implemented")
             lines.append("```")
             lines.append(f"**Validation:** {f.validation or 'N/A'}")
-            lines.append("**Expected Result:** Finding transitions to FIXED; no regressions.")
+            lines.append("**Expected Result:** Finding transitions to VERIFIED; no regressions.")
             lines.append("**Rollback:** Revert the diff and re-run validation.")
             lines.append("")
         return "\n".join(lines) + "\n"
 
     def generate_remediation_plan(self) -> str:
         """Assemble Remediation Plan deliverable."""
-        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         lines = [
             f"# Remediation Plan: {self.repo_name}",
             "",
@@ -331,9 +359,8 @@ class ArtifactPipeline:
             "",
             "**Actions:**",
             "- [ ] Apply patch actions",
-            "",
             "**Exit criteria:**",
-            "- [ ] All HIGH findings transition to FIXED or DEFERRED",
+            "- [ ] All HIGH findings transition to VERIFIED or DEFERRED",
             "",
             "### Phase 3: Verification",
             "",
@@ -460,14 +487,14 @@ class ArtifactPipeline:
                 "exact_intended_change": f.remediation,
                 "patch": "",
                 "validation": list(f.validation),
-                "expected_result": "Finding transitions to FIXED; no regressions.",
+                "expected_result": "Finding transitions to VERIFIED; no regressions.",
                 "rollback": [f"Revert changes for {f.id} and re-run validation."]
             })
         return {"patch_actions": actions}
 
     def generate_remediation_plan_json(self) -> dict[str, Any]:
         """Return JSON Remediation Plan payload matching remediation-plan.schema.json."""
-        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         phases = [
             {
                 "phase": "Containment / Safety",
@@ -479,7 +506,7 @@ class ArtifactPipeline:
                 "phase": "Minimal Fixes",
                 "objective": "Resolve HIGH/MEDIUM findings with smallest safe change.",
                 "actions": ["Apply patch actions"],
-                "exit_criteria": ["All HIGH findings transition to FIXED or DEFERRED"]
+                "exit_criteria": ["All HIGH findings transition to VERIFIED or DEFERRED"]
             },
             {
                 "phase": "Verification",
@@ -523,11 +550,13 @@ class ArtifactPipeline:
         return self._build_redaction_log_data()
 
     def _repo_root(self) -> str:
-        """Return the repository root path when a session is available."""
-        return self.session.repository_path if self.session else str(Path(".").resolve())
+        """Derive normalized repository root path."""
+        if self.session and self.session.repository_path:
+            return self.session.repository_path
+        return str(Path.cwd())
 
     def _get_git_commit(self) -> str:
-        """Return the current git commit hash or 'unknown'."""
+        """Return the current git HEAD commit hash or 'unknown'."""
         try:
             res = subprocess.run(
                 ["git", "rev-parse", "HEAD"],
@@ -575,12 +604,12 @@ class ArtifactPipeline:
         protocol_version = _derive_protocol_version()
 
         health = self.registry.health_score()
-        score = health.score if health.score is not None else 10
+        score = health.score
         band = _score_to_report_band(health.score)
         reasons = list(health.reasons) if health.reasons else [f"Evaluated against HQE v{protocol_version} rubric"]
 
         counts = self.registry.count_by_severity()
-        open_findings = [f for f in self.registry.findings.values() if f.status != "FIXED"]
+        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         critical_high = [f for f in open_findings if f.severity in ("CRITICAL", "HIGH")]
         severity_rank = {"CRITICAL": 0, "HIGH": 1}
         sorted_critical_high = sorted(
@@ -607,6 +636,7 @@ class ArtifactPipeline:
             "health_score": {
                 "score": score,
                 "band": band,
+                "omitted": health.omitted,
                 "reasons": reasons,
             },
             "executive_summary": {
@@ -621,9 +651,22 @@ class ArtifactPipeline:
         }
 
     def build_all_artifacts(self, output_dir: Path | str = "artifacts") -> dict[str, Path]:
-        """Compile and write all canonical deliverables."""
+        """Compile, validate against schemas, and write all canonical deliverables."""
         out = Path(output_dir).resolve()
         out.mkdir(parents=True, exist_ok=True)
+
+        patch_actions_json = self.generate_patch_actions_json()
+        remediation_plan_json = self.generate_remediation_plan_json()
+        validation_report_json = self.generate_validation_report_json()
+        redaction_log_json = self.generate_redaction_log_json()
+        report_json = self.generate_report_json()
+
+        # Enforce canonical schema contracts before emitting machine deliverables
+        _validate_json_artifact(patch_actions_json, "patch-actions.schema.json")
+        _validate_json_artifact(remediation_plan_json, "remediation-plan.schema.json")
+        _validate_json_artifact(validation_report_json, "validation-report.schema.json")
+        _validate_json_artifact(redaction_log_json, "redaction-log.schema.json")
+        _validate_json_artifact(report_json, "report.schema.json")
 
         artifact_map = {
             "RISK_REGISTER.md": self.generate_risk_register(),
@@ -640,11 +683,11 @@ class ArtifactPipeline:
             "REMEDIATION_PLAN.md": self.generate_remediation_plan(),
             "VALIDATION_REPORT.md": self.generate_validation_report(),
             "REDACTION_LOG.md": self.generate_redaction_log(),
-            "PATCH_ACTIONS.json": json.dumps(self.generate_patch_actions_json(), indent=2),
-            "REMEDIATION_PLAN.json": json.dumps(self.generate_remediation_plan_json(), indent=2),
-            "VALIDATION_REPORT.json": json.dumps(self.generate_validation_report_json(), indent=2),
-            "REDACTION_LOG.json": json.dumps(self.generate_redaction_log_json(), indent=2),
-            "REPORT.json": json.dumps(self.generate_report_json(), indent=2),
+            "PATCH_ACTIONS.json": json.dumps(patch_actions_json, indent=2),
+            "REMEDIATION_PLAN.json": json.dumps(remediation_plan_json, indent=2),
+            "VALIDATION_REPORT.json": json.dumps(validation_report_json, indent=2),
+            "REDACTION_LOG.json": json.dumps(redaction_log_json, indent=2),
+            "REPORT.json": json.dumps(report_json, indent=2),
         }
 
         paths: dict[str, Path] = {}

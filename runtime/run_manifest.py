@@ -22,28 +22,29 @@ def _derive_protocol_version() -> str:
     """Read the canonical protocol version from the HQE protocol YAML."""
     try:
         data = yaml.safe_load(_PROTOCOL_YAML.read_text(encoding="utf-8"))
-        version = data.get("protocol_version") or data.get("schema_version")
-        if version:
-            return str(version)
+        if isinstance(data, dict):
+            version = data.get("protocol_version") or data.get("schema_version")
+            if version:
+                return str(version)
     except Exception:
         pass
-    return "5.0.0"
+    return "unknown"
 
 
 def _derive_protocol_name() -> str:
     """Read the canonical protocol name from the HQE protocol YAML."""
     try:
         data = yaml.safe_load(_PROTOCOL_YAML.read_text(encoding="utf-8"))
-        name = (
-            data.get("meta", {}).get("name")
-            or data.get("name")
-            or "HQE Engineer Protocol"
-        )
-        if name:
-            return str(name)
+        if isinstance(data, dict):
+            name = (
+                data.get("meta", {}).get("name")
+                or data.get("name")
+            )
+            if name:
+                return str(name)
     except Exception:
         pass
-    return "HQE Engineer Protocol"
+    return "unknown"
 
 
 class RunManifestGenerator:
@@ -105,9 +106,10 @@ class RunManifestGenerator:
                 }
             ]
 
-        unreviewed_surfaces = unreviewed_surfaces or [
-            "Coverage not established; surfaces may be unreviewed"
-        ]
+        if unreviewed_surfaces is None:
+            unreviewed_surfaces = [
+                "Coverage not established; surfaces may be unreviewed"
+            ]
 
         # Resolve health score.
         if health_score is None:

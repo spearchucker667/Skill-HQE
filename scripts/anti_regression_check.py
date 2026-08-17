@@ -99,6 +99,13 @@ def _make_sample_registry() -> FindingRegistry:
         likelihood="Medium",
         likelihood_justification="Observed pattern",
         exposure_evidence="src/auth.py:2",
+        taint_chain={
+            "source": "src/auth.py#L2",
+            "transforms": ["comparator"],
+            "validation_boundary": "auth module",
+            "sink": "equality check",
+            "impact": "side-channel leakage",
+        },
     ))
 
     return registry

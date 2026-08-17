@@ -19,15 +19,16 @@
     "health_score": {
       "type": "object",
       "properties": {
-        "score": { "type": "integer", "minimum": 1, "maximum": 10 },
-        "band": { "type": "string", "enum": ["Production-ready", "Solid", "Fragile", "Unstable", "Broken"] },
+        "score": { "type": ["integer", "null"], "minimum": 1, "maximum": 10 },
+        "band": { "type": "string", "enum": ["Production-ready", "Solid", "Fragile", "Unstable", "Broken", "Unknown"] },
+        "omitted": { "type": "boolean" },
         "reasons": {
           "type": "array",
           "items": { "type": "string" },
           "minItems": 1
         }
       },
-      "required": ["score", "band", "reasons"]
+      "required": ["band", "reasons"]
     },
     "executive_summary": {
       "type": "object",

@@ -70,27 +70,36 @@ def score_from_findings(findings) -> int:
 
     # Map 0-100 to the 1-10 rubric.
     if score >= 90:
-        return 10
-    if score >= 75:
-        return 8
-    if score >= 55:
-        return 6
-    if score >= 30:
-        return 4
-    return 2
+        calculated = 10
+    elif score >= 75:
+        calculated = 8
+    elif score >= 55:
+        calculated = 6
+    elif score >= 30:
+        calculated = 4
+    else:
+        calculated = 2
+
+    # Canonical rule: Blocking CRITICAL findings constrain score to <= 4.
+    if counts.get("CRITICAL", 0) > 0:
+        calculated = min(calculated, 4)
+
+    return calculated
 
 
-def score_to_band(score: int) -> str:
+def score_to_band(score: int | None) -> str:
     """Map a 1-10 numeric score to a qualitative band."""
+    if score is None:
+        return "Unknown"
     if score >= 9:
-        return "Exceptional"
+        return "Production-ready"
     if score >= 7:
         return "Solid"
     if score >= 5:
-        return "Adequate"
+        return "Fragile"
     if score >= 3:
-        return "Concerning"
-    return "Critical Risk"
+        return "Unstable"
+    return "Broken"
 
 
 def compute_health_score(

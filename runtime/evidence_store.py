@@ -222,11 +222,12 @@ class EvidenceStore:
         executed: bool = True
     ) -> dict[str, Any]:
         """Record tool invocation with automatic secret redaction."""
+        redacted_cmd, _ = redact_text(command)
         redacted_out, _ = redact_text(stdout)
         redacted_err, _ = redact_text(stderr)
         record = {
             "tool_name": tool_name,
-            "command": command,
+            "command": redacted_cmd,
             "exit_code": exit_code,
             "stdout": redacted_out,
             "stderr": redacted_err,
