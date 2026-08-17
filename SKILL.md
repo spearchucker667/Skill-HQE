@@ -1,5 +1,5 @@
 ---
-name: HQE
+name: hqe
 description: Comprehensive codebase health auditing, remediation, and verification skill based on the canonical HQE Protocol v5.0.0.
 version: 5.0.0
 ---
