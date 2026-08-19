@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from runtime import EvidenceStore
+from runtime import EvidenceStore, CodeEvidence
 
 
 def test_matching_snippet_accepted():
@@ -178,6 +178,26 @@ def test_symbol_locator_checks_snippet_against_disk():
         )
         assert ev.verified is True
         assert ev.verification_method == "symbol"
+
+
+def test_code_evidence_validate_rejects_empty_snippet():
+    ev = CodeEvidence(path="src.py", snippet="")
+    assert any("snippet" in err for err in ev.validate())
+
+
+def test_code_evidence_validate_rejects_invalid_line_range():
+    ev = CodeEvidence(path="src.py", snippet="x", start_line=0, end_line=1)
+    assert any("start_line" in err for err in ev.validate())
+
+
+def test_code_evidence_validate_rejects_end_line_before_start():
+    ev = CodeEvidence(path="src.py", snippet="x", start_line=5, end_line=2)
+    assert any("end_line" in err for err in ev.validate())
+
+
+def test_code_evidence_validate_rejects_incomplete_anchor_locator():
+    ev = CodeEvidence(path="src.py", snippet="x", anchor="foo")
+    assert any("anchor" in err and "grep_signature" in err for err in ev.validate())
 
 
 def test_symbol_locator_rejects_fabricated_snippet():

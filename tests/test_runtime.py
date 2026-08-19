@@ -216,10 +216,10 @@ def test_health_score_bounds():
             likelihood_justification="default path",
             exposure_evidence="src/x.py:1"
         ))
-    # With findings present the numeric score is reported even if coverage is unknown.
+    # With coverage unknown the numeric score is omitted even when findings exist.
     score = registry.health_score()
-    assert score.omitted is False
-    assert score.score == 2  # maps to Broken band (1-2)
+    assert score.omitted is True
+    assert score.score is None
 
 
 def test_typed_redaction_engine():

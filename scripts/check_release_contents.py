@@ -58,6 +58,9 @@ FORBIDDEN_ROOT_DIRS = {
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
+    ".venv",
+    ".agents",
+    ".freebuff",
     "tests",  # Test fixtures and tests are development-only
     "audit-output",
 }

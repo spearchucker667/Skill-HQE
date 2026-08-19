@@ -64,9 +64,9 @@ class CodeEvidence:
     def from_dict(cls, raw: dict[str, Any]) -> "CodeEvidence":
         """Build a CodeEvidence from a serialized dict (lenient, mirrors to_dict).
 
-        Reads all fields so verification state (``verified``,
-        ``verification_method``, ``verified_at``, ``source_hash``) survives a
-        round-trip — the previous inline loaders dropped those four fields.
+        Verification metadata from an external source is untrusted and is reset
+        to defaults. Callers that need ``verified=True`` must supply a
+        ``repo_root`` and invoke :meth:`verify` after deserialization.
         """
         return cls(
             path=raw.get("path", ""),
@@ -76,11 +76,152 @@ class CodeEvidence:
             symbol=raw.get("symbol"),
             anchor=raw.get("anchor"),
             grep_signature=raw.get("grep_signature"),
-            verified=raw.get("verified", False),
-            verification_method=raw.get("verification_method"),
-            verified_at=raw.get("verified_at"),
-            source_hash=raw.get("source_hash"),
+            verified=False,
+            verification_method=None,
+            verified_at=None,
+            source_hash=None,
         )
+
+    def validate(self) -> list[str]:
+        """Validate semantic evidence invariants.
+
+        Mirrors the checks in ``scripts/validate_semantics.py`` so that
+        in-memory evidence is held to the same standard as serialized findings.
+        """
+        errors: list[str] = []
+        if not self.snippet or not self.snippet.strip():
+            errors.append("snippet must be a non-empty string")
+
+        has_line_range = self.start_line is not None or self.end_line is not None
+        has_anchor = self.anchor is not None
+        has_grep = self.grep_signature is not None
+
+        if has_line_range:
+            if self.start_line is None or not isinstance(self.start_line, int) or self.start_line < 1:
+                errors.append(f"start_line must be an integer >= 1 (got {self.start_line})")
+            if self.end_line is None or not isinstance(self.end_line, int):
+                errors.append(f"end_line must be an integer (got {self.end_line})")
+            elif isinstance(self.start_line, int) and self.end_line < self.start_line:
+                errors.append(
+                    f"end_line ({self.end_line}) cannot be less than start_line ({self.start_line})"
+                )
+
+        if has_anchor or has_grep:
+            if not self.anchor or not self.grep_signature:
+                errors.append("anchor-based evidence must include both 'anchor' and 'grep_signature'")
+
+        return errors
+
+    def verify(
+        self,
+        repo_root: Path | str,
+        *,
+        require_unique_anchor: bool = False
+    ) -> bool:
+        """Verify this evidence against disk and update verification fields.
+
+        Returns ``True`` when the snippet matches the file and a valid locator
+        is present, ``False`` otherwise. On success ``verified``,
+        ``verification_method``, ``verified_at`` and ``source_hash`` are set.
+        Path traversal outside ``repo_root`` is rejected.
+        """
+        repo = Path(repo_root).resolve()
+        raw = repo / self.path
+        if ".." in raw.parts:
+            return False
+        try:
+            target_path = raw.resolve()
+            target_path.relative_to(repo)
+        except ValueError:
+            return False
+        if not target_path.is_file():
+            return False
+
+        file_bytes = target_path.read_bytes()
+        self.source_hash = hashlib.sha256(file_bytes).hexdigest()
+
+        has_line_range = self.start_line is not None and self.end_line is not None
+        has_anchor = self.anchor is not None
+        has_symbol = self.symbol is not None
+        has_grep = self.grep_signature is not None
+
+        if not has_line_range and not has_anchor and not has_symbol and not has_grep:
+            return False
+
+        if has_line_range:
+            ok, method = self._verify_line_range(target_path)
+        elif has_anchor:
+            ok, method = self._verify_anchor(target_path, require_unique_anchor)
+        else:
+            ok, method = self._verify_locator_only(target_path)
+
+        if not ok:
+            return False
+
+        self.verified = True
+        self.verification_method = method
+        self.verified_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return True
+
+    def _verify_line_range(self, target_path: Path) -> tuple[bool, str | None]:
+        """Return (verified, method_or_error) for a line-range locator."""
+        if self.start_line is None or self.end_line is None:
+            return False, "line range verification requires start_line and end_line"
+        if self.start_line < 1:
+            return False, "start_line must be >= 1"
+        if self.end_line < self.start_line:
+            return False, "end_line cannot be less than start_line"
+
+        file_text = target_path.read_text(encoding="utf-8", errors="replace")
+        lines = file_text.splitlines()
+
+        if self.end_line > len(lines):
+            return False, "end_line exceeds file length"
+
+        selected = "\n".join(lines[self.start_line - 1:self.end_line])
+        expected = _normalize_line(self.snippet)
+        actual = _normalize_line(selected)
+        if expected != actual:
+            return False, "snippet does not match disk content for claimed line range"
+        return True, "line_range"
+
+    def _verify_anchor(
+        self,
+        target_path: Path,
+        require_unique: bool
+    ) -> tuple[bool, str | None]:
+        """Return (verified, method_or_error) for an anchor locator."""
+        if self.anchor is None:
+            return False, "anchor verification requires anchor"
+
+        file_text = target_path.read_text(encoding="utf-8", errors="replace")
+        lines = file_text.splitlines()
+        matches = [idx for idx, line in enumerate(lines, start=1) if self.anchor in line]
+
+        if not matches:
+            return False, f"anchor not found in {target_path.name}"
+
+        if require_unique and len(matches) > 1:
+            return False, f"ambiguous anchor: {len(matches)} occurrences in {target_path.name}"
+
+        normalized_snippet = _normalize_line(self.snippet)
+        if _normalize_line(self.anchor) not in normalized_snippet:
+            return False, "snippet does not contain the anchor"
+        if normalized_snippet not in _normalize_line(file_text):
+            return False, "snippet does not match disk content for anchor"
+        return True, "anchor"
+
+    def _verify_locator_only(self, target_path: Path) -> tuple[bool, str | None]:
+        """Return (verified, method_or_error) for symbol/grep_signature locators."""
+        file_text = target_path.read_text(encoding="utf-8", errors="replace")
+        if _normalize_line(self.snippet) not in _normalize_line(file_text):
+            return False, "snippet does not match disk content"
+        if self.symbol is not None and self.symbol not in file_text:
+            return False, f"symbol not found in {target_path.name}"
+        if self.grep_signature is not None and self.grep_signature not in file_text:
+            return False, f"grep_signature not found in {target_path.name}"
+        method = "symbol" if self.symbol is not None else "grep_signature"
+        return True, method
 
 
 class EvidenceStore:

@@ -43,7 +43,11 @@
           "tool": { "type": "string" },
           "command": { "type": "string" },
           "exit_code": { "type": "integer" },
-          "result": { "type": "string" }
+          "executed": { "type": "boolean" },
+          "result": {
+            "type": "string",
+            "enum": ["success", "failure", "not_run"]
+          }
         }
       }
     },

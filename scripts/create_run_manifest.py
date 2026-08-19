@@ -34,7 +34,7 @@ def main() -> int:
     parser.add_argument("--output", default="HQE_RUN_MANIFEST.json", help="Output JSON path")
     args = parser.parse_args()
 
-    registry = FindingRegistry()
+    registry = FindingRegistry(repo_root=args.repo_path)
     if args.findings_file:
         f_path = Path(args.findings_file).resolve()
         if not f_path.is_file():

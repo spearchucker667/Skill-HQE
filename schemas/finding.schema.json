@@ -64,25 +64,32 @@
         "type": "object",
         "properties": {
           "path": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "start_line": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1
           },
           "end_line": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1
           },
           "anchor": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "grep_signature": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "symbol": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "snippet": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           }
         },
         "anyOf": [

@@ -31,6 +31,58 @@ def _derive_protocol_version() -> str:
     return "unknown"
 
 
+def _derive_output_controls() -> dict[str, Any]:
+    """Read output controls from the canonical HQE protocol YAML."""
+    try:
+        data = yaml.safe_load(_PROTOCOL_YAML.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data.get("output_controls", {}) or {}
+    except Exception:
+        pass
+    return {}
+
+
+def _apply_output_caps(findings, size_limits: dict[str, Any] | None) -> list:
+    """Apply per-category output caps from the protocol.
+
+    CRITICAL/HIGH findings are uncapped by default. MEDIUM findings are capped
+    per category. LOW/INFO findings are capped per category. Findings are
+    prioritized by severity and then by stable ID.
+    """
+    if size_limits is None:
+        size_limits = {}
+
+    medium_max = size_limits.get("medium_max_per_category")
+    low_info_max = size_limits.get("low_and_info_max_per_category")
+    critical_high_max = size_limits.get("critical_and_high_max_total")
+
+    by_cat: dict[str, list] = {}
+    for finding in findings:
+        by_cat.setdefault(finding.category, []).append(finding)
+
+    severity_rank = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+    result = []
+    for cat, items in by_cat.items():
+        items = sorted(
+            items,
+            key=lambda f: (severity_rank.get(f.severity, 5), f.id)
+        )
+        critical_high = [f for f in items if f.severity in ("CRITICAL", "HIGH")]
+        medium = [f for f in items if f.severity == "MEDIUM"]
+        low_info = [f for f in items if f.severity in ("LOW", "INFO")]
+
+        if critical_high_max is not None:
+            critical_high = critical_high[:critical_high_max]
+        if medium_max is not None:
+            medium = medium[:medium_max]
+        if low_info_max is not None:
+            low_info = low_info[:low_info_max]
+
+        result.extend(critical_high + medium + low_info)
+
+    return sorted(result, key=lambda f: f.id)
+
+
 def _score_to_report_band(score: int | None) -> str:
     """Map internal health score band to report.schema.json enum values."""
     if score is None:
@@ -82,6 +134,11 @@ class ArtifactPipeline:
         self.session = session
         self.repo_name = repo_name
         self.redaction_engine = redaction_engine
+        self._output_limits = _derive_output_controls().get("size_limits")
+
+    def _capped_findings(self):
+        """Return registry findings after applying protocol output caps."""
+        return _apply_output_caps(self.registry.findings.values(), self._output_limits)
 
     def generate_risk_register(self) -> str:
         """Assemble canonical Risk Register deliverable."""
@@ -92,7 +149,7 @@ class ArtifactPipeline:
             "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |"
         ]
         sorted_findings = sorted(
-            self.registry.findings.values(),
+            self._capped_findings(),
             key=lambda f: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}.get(f.severity, 5), f.id)
         )
         for f in sorted_findings:
@@ -116,7 +173,7 @@ class ArtifactPipeline:
         confidence_rank = {"FACT": 0, "INFERENCE": 1, "HYPOTHESIS": 2, "NEEDS_VERIFICATION": 3}
         effort_rank = {"S": 0, "M": 1, "L": 2}
         for f in sorted(
-            self.registry.findings.values(),
+            self._capped_findings(),
             key=lambda x: (
                 severity_rank.get(x.severity, 5),
                 confidence_rank.get(x.confidence, 4),
@@ -136,7 +193,7 @@ class ArtifactPipeline:
             ""
         ]
         by_cat: dict[str, list[Finding]] = {}
-        for f in self.registry.findings.values():
+        for f in self._capped_findings():
             by_cat.setdefault(f.category, []).append(f)
 
         for cat, items in sorted(by_cat.items()):
@@ -159,8 +216,8 @@ class ArtifactPipeline:
             "## 🚀 Quick Wins (Effort S: <=2 files, Localized)",
             ""
         ]
-        quick = [f for f in self.registry.findings.values() if f.effort == "S"]
-        structural = [f for f in self.registry.findings.values() if f.effort in ("M", "L")]
+        quick = [f for f in self._capped_findings() if f.effort == "S"]
+        structural = [f for f in self._capped_findings() if f.effort in ("M", "L")]
 
         for q in quick:
             lines.append(f"- [ ] **{q.id}**: {q.title} — `{q.affected_component}`")
@@ -181,7 +238,7 @@ class ArtifactPipeline:
 
     def generate_security_posture(self) -> str:
         """Assemble Security Posture Summary deliverable."""
-        sec_findings = [f for f in self.registry.findings.values() if f.category == "SEC"]
+        sec_findings = [f for f in self._capped_findings() if f.category == "SEC"]
         lines = [
             f"# Security Posture Summary: {self.repo_name}",
             "",
@@ -204,7 +261,7 @@ class ArtifactPipeline:
 
     def generate_reliability_summary(self) -> str:
         """Assemble Reliability Summary deliverable."""
-        rel_findings = [f for f in self.registry.findings.values() if f.category in ("BOOT", "REL")]
+        rel_findings = [f for f in self._capped_findings() if f.category in ("BOOT", "REL")]
         lines = [
             f"# Reliability & Startup Posture: {self.repo_name}",
             "",
@@ -224,7 +281,7 @@ class ArtifactPipeline:
             "",
             "## Required Verification Suites"
         ]
-        for f in self.registry.findings.values():
+        for f in self._capped_findings():
             if f.validation:
                 lines.append(f"### {f.id}: {f.title}")
                 for cmd in f.validation:
@@ -234,7 +291,7 @@ class ArtifactPipeline:
 
     def generate_unknowns_verification(self) -> str:
         """Assemble Unknowns & Verification Hypotheses deliverable."""
-        unknowns = [f for f in self.registry.findings.values() if f.confidence in ("HYPOTHESIS", "NEEDS_VERIFICATION")]
+        unknowns = [f for f in self._capped_findings() if f.confidence in ("HYPOTHESIS", "NEEDS_VERIFICATION")]
         lines = [
             f"# Unknowns, Assumptions & Verification Plan: {self.repo_name}",
             "",
@@ -253,7 +310,7 @@ class ArtifactPipeline:
     def generate_confidence_declaration(self) -> str:
         """Assemble Confidence Declaration deliverable."""
         conf_counts = {c: 0 for c in ("FACT", "INFERENCE", "HYPOTHESIS", "NEEDS_VERIFICATION")}
-        for f in self.registry.findings.values():
+        for f in self._capped_findings():
             conf_counts[f.confidence] = conf_counts.get(f.confidence, 0) + 1
 
         lines = [
@@ -272,7 +329,7 @@ class ArtifactPipeline:
     def generate_incident_mini_report(self) -> str:
         """Assemble Incident Mini-Report for active security incidents."""
         sec_incidents = [
-            f for f in self.registry.findings.values()
+            f for f in self._capped_findings()
             if f.category == "SEC" and f.severity in ("CRITICAL", "HIGH") and f.status not in ("VERIFIED", "REJECTED", "DEFERRED")
         ]
         lines = [
@@ -301,7 +358,7 @@ class ArtifactPipeline:
 
     def generate_patch_actions(self) -> str:
         """Assemble Patch Actions deliverable for all open findings."""
-        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
+        open_findings = [f for f in self._capped_findings() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         lines = [
             f"# Patch Actions: {self.repo_name}",
             "",
@@ -324,7 +381,7 @@ class ArtifactPipeline:
 
     def generate_remediation_plan(self) -> str:
         """Assemble Remediation Plan deliverable."""
-        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
+        open_findings = [f for f in self._capped_findings() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         lines = [
             f"# Remediation Plan: {self.repo_name}",
             "",
@@ -403,7 +460,7 @@ class ArtifactPipeline:
             "| Finding ID | Status | Commands | Expected | Actual | Notes |",
             "| :--- | :--- | :--- | :--- | :--- | :--- |"
         ]
-        for f in self.registry.findings.values():
+        for f in self._capped_findings():
             if f.validation:
                 cmds = "; ".join(f.validation)
                 lines.append(
@@ -485,7 +542,7 @@ class ArtifactPipeline:
         Only open findings receive remediation instructions; findings already
         VERIFIED, REJECTED, or DEFERRED must not produce patch actions.
         """
-        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
+        open_findings = [f for f in self._capped_findings() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         actions = []
         for f in sorted(open_findings, key=lambda x: x.id):
             actions.append({
@@ -501,7 +558,7 @@ class ArtifactPipeline:
 
     def generate_remediation_plan_json(self) -> dict[str, Any]:
         """Return JSON Remediation Plan payload matching remediation-plan.schema.json."""
-        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
+        open_findings = [f for f in self._capped_findings() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         phases = [
             {
                 "phase": "Containment / Safety",
@@ -537,7 +594,7 @@ class ArtifactPipeline:
     def generate_validation_report_json(self) -> dict[str, Any]:
         """Return JSON Validation Report payload matching validation-report.schema.json."""
         findings_validated = []
-        for f in self.registry.findings.values():
+        for f in self._capped_findings():
             if f.validation:
                 findings_validated.append({
                     "finding_id": f.id,
@@ -617,7 +674,7 @@ class ArtifactPipeline:
         reasons = list(health.reasons) if health.reasons else [f"Evaluated against HQE v{protocol_version} rubric"]
 
         counts = self.registry.count_by_severity()
-        open_findings = [f for f in self.registry.findings.values() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
+        open_findings = [f for f in self._capped_findings() if f.status not in ("VERIFIED", "REJECTED", "DEFERRED")]
         critical_high = [f for f in open_findings if f.severity in ("CRITICAL", "HIGH")]
         severity_rank = {"CRITICAL": 0, "HIGH": 1}
         sorted_critical_high = sorted(

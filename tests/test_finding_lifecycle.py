@@ -51,6 +51,22 @@ def test_explicit_update_works():
     assert registry.get("HQE-BUG-001").title == "Updated title"
 
 
+def test_update_rejects_status_change():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001", status="OPEN")
+    registry.register(f)
+    with pytest.raises(ValueError, match="transition_status"):
+        registry.update("HQE-BUG-001", status="VERIFIED")
+
+
+def test_update_rejects_id_change():
+    registry = FindingRegistry()
+    f = _make_finding("HQE-BUG-001")
+    registry.register(f)
+    with pytest.raises(ValueError, match="immutable"):
+        registry.update("HQE-BUG-001", id="HQE-BUG-999")
+
+
 def test_invalid_status_transition_rejected():
     registry = FindingRegistry()
     f = _make_finding("HQE-BUG-001", status="OPEN")

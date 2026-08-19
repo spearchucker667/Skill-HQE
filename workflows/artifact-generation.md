@@ -14,7 +14,7 @@ Before generating artifacts, confirm the following:
 - [ ] `HQE_SESSION_LOG.json` exists and is schema-valid.
 - [ ] `scripts/build_artifacts.py`, `scripts/create_run_manifest.py`, and `scripts/validate_protocol_bundle.py` are present and runnable.
 - [ ] `templates/` contains the required Markdown templates.
-- [ ] Output caps from `protocol/hqe-engineer.yaml` are understood (30 CRITICAL/HIGH total, 25 MEDIUM, 20 LOW one-liners).
+- [ ] Output caps from `references/output-controls.md` are understood (CRITICAL/HIGH uncapped; MEDIUM capped at 15 per category; LOW/INFO capped at 10 per category).
 
 ## 3. Entry Criteria
 
@@ -64,22 +64,32 @@ Flag the issue as `STOP-THE-LINE: [issue]` and resolve before emitting artifacts
 
 ### Phase 2: Assemble Canonical Deliverables
 
-**Goal**: Generate the nine canonical Markdown artifacts.
+**Goal**: Generate the 14 canonical Markdown artifacts and 5 machine-readable JSON artifacts.
 
 1. **Run the artifact builder**:
    ```bash
    python3 scripts/build_artifacts.py HQE_FINDINGS.json --output-dir .
    ```
 2. The pipeline deterministically generates:
-   - `HQE_RISK_REGISTER.md`
-   - `HQE_MASTER_TODO.md`
-   - `HQE_PATTERN_FINDINGS.md`
-   - `HQE_QUICK_WINS_VS_STRUCTURAL.md`
-   - `HQE_SECURITY_POSTURE.md`
-   - `HQE_RELIABILITY.md`
-   - `HQE_TESTING_GAPS.md`
-   - `HQE_UNKNOWNS.md`
-   - `HQE_CONFIDENCE.md`
+   - `RISK_REGISTER.md`
+   - `MASTER_TODO_BACKLOG.md`
+   - `PATTERN_FINDINGS.md`
+   - `QUICK_WINS_VS_STRUCTURAL.md`
+   - `SECURITY_POSTURE_SUMMARY.md`
+   - `RELIABILITY_SUMMARY.md`
+   - `TESTING_GAPS.md`
+   - `UNKNOWNS_VERIFICATION.md`
+   - `CONFIDENCE_DECLARATION.md`
+   - `INCIDENT_MINI_REPORT.md`
+   - `PATCH_ACTIONS.md`
+   - `REMEDIATION_PLAN.md`
+   - `VALIDATION_REPORT.md`
+   - `REDACTION_LOG.md`
+   - `PATCH_ACTIONS.json`
+   - `REMEDIATION_PLAN.json`
+   - `VALIDATION_REPORT.json`
+   - `REDACTION_LOG.json`
+   - `REPORT.json`
 3. **Verify each artifact** is non-empty and internally consistent.
 
 **Evidence to collect**:
@@ -88,7 +98,7 @@ Flag the issue as `STOP-THE-LINE: [issue]` and resolve before emitting artifacts
 - Any build warnings or errors.
 
 **Exit criteria**:
-- [ ] All nine canonical Markdown artifacts are generated.
+- [ ] All 14 canonical Markdown artifacts and 5 JSON artifacts are generated.
 - [ ] No build errors remain.
 
 ### Phase 3: Generate Report
@@ -139,10 +149,10 @@ Flag the issue as `STOP-THE-LINE: [issue]` and resolve before emitting artifacts
 
 **Goal**: Ensure all artifacts reference the same facts.
 
-1. **Verify stable IDs**: the same finding ID refers to the same issue in `HQE_FINDINGS.json`, `HQE_RISK_REGISTER.md`, `HQE_MASTER_TODO.md`, `HQE_PATTERN_FINDINGS.md`, and `HQE_REPORT.md`.
+1. **Verify stable IDs**: the same finding ID refers to the same issue in `HQE_FINDINGS.json`, `RISK_REGISTER.md`, `MASTER_TODO_BACKLOG.md`, `PATTERN_FINDINGS.md`, and `REPORT.json`.
 2. **Verify counts**: severity counts in the report match the manifest and findings.
 3. **Verify health score** is supported by 3–5 evidence-backed reasons.
-4. **Verify output caps** are respected (30/25/20).
+4. **Verify output caps** are respected (CRITICAL/HIGH uncapped; MEDIUM ≤ 15 per category; LOW/INFO ≤ 10 per category).
 5. **Run the protocol bundle validator**:
    ```bash
    python3 scripts/validate_protocol_bundle.py
@@ -162,7 +172,7 @@ Flag the issue as `STOP-THE-LINE: [issue]` and resolve before emitting artifacts
 - Validate semantic invariants (severity gates, taint chains, line bounds) before assembly.
 - Run secret-redaction checks on all snippets before emitting artifacts.
 - Ensure stable finding IDs are used consistently across every artifact.
-- Respect output caps: 30 CRITICAL/HIGH total, 25 MEDIUM, 20 LOW one-liners.
+- Respect output caps: CRITICAL/HIGH uncapped; MEDIUM capped at 15 per category; LOW/INFO capped at 10 per category.
 - Ensure the health score is evidence-based and includes 3–5 supporting reasons.
 - Do not emit empty or placeholder artifacts.
 
@@ -170,18 +180,28 @@ Flag the issue as `STOP-THE-LINE: [issue]` and resolve before emitting artifacts
 
 The full artifact set for an audit run is:
 
-- `HQE_REPORT.md` (executive summary and top-level findings)
+- `REPORT.md` (executive summary and top-level findings)
+- `REPORT.json` (machine-readable report payload)
 - `HQE_FINDINGS.json` (machine-readable findings list)
 - `HQE_RUN_MANIFEST.json` (run metadata, coverage, health score)
-- `HQE_RISK_REGISTER.md`
-- `HQE_MASTER_TODO.md`
-- `HQE_PATTERN_FINDINGS.md`
-- `HQE_QUICK_WINS_VS_STRUCTURAL.md`
-- `HQE_SECURITY_POSTURE.md`
-- `HQE_RELIABILITY.md`
-- `HQE_TESTING_GAPS.md`
-- `HQE_UNKNOWNS.md`
-- `HQE_CONFIDENCE.md`
+- `RISK_REGISTER.md`
+- `MASTER_TODO_BACKLOG.md`
+- `PATTERN_FINDINGS.md`
+- `QUICK_WINS_VS_STRUCTURAL.md`
+- `SECURITY_POSTURE_SUMMARY.md`
+- `RELIABILITY_SUMMARY.md`
+- `TESTING_GAPS.md`
+- `UNKNOWNS_VERIFICATION.md`
+- `CONFIDENCE_DECLARATION.md`
+- `INCIDENT_MINI_REPORT.md`
+- `PATCH_ACTIONS.md`
+- `REMEDIATION_PLAN.md`
+- `VALIDATION_REPORT.md`
+- `REDACTION_LOG.md`
+- `PATCH_ACTIONS.json`
+- `REMEDIATION_PLAN.json`
+- `VALIDATION_REPORT.json`
+- `REDACTION_LOG.json`
 - `HQE_SESSION_LOG.json`
 - `HQE_HANDOFF.md` (when remediation is requested; see [`workflows/handoff-generation.md`](handoff-generation.md))
 
@@ -200,8 +220,8 @@ python3 scripts/validate_protocol_bundle.py
 Artifact generation is complete when:
 
 - [ ] `HQE_FINDINGS.json` passes schema and semantic validation.
-- [ ] All nine canonical Markdown artifacts are generated and non-empty.
-- [ ] `HQE_REPORT.md` and `HQE_RUN_MANIFEST.json` are generated and consistent with findings.
+- [ ] All 14 canonical Markdown artifacts and 5 JSON artifacts are generated and non-empty.
+- [ ] `REPORT.md`, `REPORT.json`, and `HQE_RUN_MANIFEST.json` are generated and consistent with findings.
 - [ ] All machine-readable artifacts pass schema validation.
 - [ ] Stable IDs are consistent across artifacts.
 - [ ] Output caps are respected.

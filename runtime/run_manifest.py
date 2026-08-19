@@ -130,15 +130,20 @@ class RunManifestGenerator:
         # Build command representations.
         tool_records = evidence_store.tool_executions if evidence_store else []
         command_strings = [t["command"] for t in tool_records]
-        command_records = [
-            {
+        command_records = []
+        for t in tool_records:
+            executed = bool(t.get("executed", True))
+            if executed:
+                result = "success" if t["exit_code"] == 0 else "failure"
+            else:
+                result = "not_run"
+            command_records.append({
                 "tool": t["tool_name"],
                 "command": t["command"],
                 "exit_code": t["exit_code"],
-                "result": "success" if t["exit_code"] == 0 else "failure",
-            }
-            for t in tool_records
-        ]
+                "executed": executed,
+                "result": result,
+            })
 
         manifest: dict[str, Any] = {
             "run_id": self.run_id,

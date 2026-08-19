@@ -101,9 +101,9 @@ def validate_yaml_semantics(data: Dict[str, Any]) -> List[str]:
     # Check output controls
     output_controls = data.get('output_controls', {})
     size_limits = output_controls.get('size_limits', {})
-    
-    critical_max = size_limits.get('critical_and_high_max_total', 0)
-    if critical_max < 20 or critical_max > 50:
+
+    critical_max = size_limits.get('critical_and_high_max_total')
+    if critical_max is not None and (critical_max < 20 or critical_max > 50):
         warnings.append(f"critical_and_high_max_total ({critical_max}) seems unusual")
     
     # Check anti-patterns

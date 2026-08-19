@@ -97,9 +97,29 @@ def test_command_records_preserve_structure():
         "tool": "pytest",
         "command": "pytest tests/",
         "exit_code": 0,
+        "executed": True,
         "result": "success",
     }
     assert manifest["command_records"][1]["result"] == "failure"
+    assert manifest["command_records"][1]["executed"] is True
+
+
+def test_unexecuted_command_recorded_as_not_run():
+    registry = FindingRegistry()
+    store = EvidenceStore(repo_root=ROOT)
+    store.record_tool_execution(
+        tool_name="pytest",
+        command="pytest tests/",
+        exit_code=0,
+        executed=False,
+    )
+
+    gen = RunManifestGenerator(repo_path=ROOT, mode="audit")
+    manifest = gen.build_manifest(registry=registry, total_files=0, evidence_store=store)
+
+    assert len(manifest["command_records"]) == 1
+    assert manifest["command_records"][0]["executed"] is False
+    assert manifest["command_records"][0]["result"] == "not_run"
 
 
 def test_int_health_score_backward_compatible():

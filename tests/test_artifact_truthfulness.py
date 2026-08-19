@@ -137,6 +137,35 @@ def test_incident_report_excludes_verified_security_findings():
     assert "No active CRITICAL/HIGH security incidents" in text
 
 
+def test_output_caps_limit_medium_low_per_category():
+    """Protocol output caps truncate MEDIUM/LOW per category while keeping HIGH."""
+    registry = FindingRegistry()
+    for i in range(20):
+        registry.register(_make_finding(f"HQE-BUG-{i+1:03d}", severity="MEDIUM"))
+    for i in range(12):
+        registry.register(_make_finding(f"HQE-REL-{i+1:03d}", category="REL", severity="LOW"))
+    registry.register(_make_high_security_finding("HQE-SEC-100"))
+
+    pipeline = ArtifactPipeline(registry, repo_name="test")
+    risk_text = pipeline.generate_risk_register()
+
+    # HIGH is uncapped; MEDIUM capped at 15 per category; LOW capped at 10 per category.
+    assert "HQE-SEC-100" in risk_text
+    assert "HQE-BUG-015" in risk_text
+    assert "HQE-BUG-016" not in risk_text
+    assert "HQE-REL-010" in risk_text
+    assert "HQE-REL-011" not in risk_text
+
+
+def test_output_caps_preserve_all_critical_high():
+    registry = FindingRegistry()
+    for i in range(50):
+        registry.register(_make_high_security_finding(f"HQE-SEC-{i+1:03d}"))
+    pipeline = ArtifactPipeline(registry, repo_name="test")
+    risk_text = pipeline.generate_risk_register()
+    assert risk_text.count("HQE-SEC-") == 50
+
+
 def test_incident_report_excludes_low_security_findings():
     registry = FindingRegistry()
     finding = _make_finding("HQE-SEC-001", category="SEC", severity="LOW")

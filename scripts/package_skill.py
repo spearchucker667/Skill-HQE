@@ -25,6 +25,9 @@ EXCLUDED_DIRECTORIES = {
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
+    ".venv",
+    ".agents",
+    ".freebuff",
     "development",
     "archive",
     "tests",  # Test fixtures and tests are development assets

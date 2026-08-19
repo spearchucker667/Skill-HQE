@@ -92,14 +92,14 @@ flowchart TD
     P05 --> Deep
     Deep --> Gate[Severity Gate & Taint Chain Validation]
     Gate --> Runtime[Runtime Engine State Machine & Assembly]
-    Runtime --> Output[Generate HQE_REPORT.md & 13 Deliverables]
+    Runtime --> Output[Generate HQE_REPORT.md & 19 Deliverables]
 ```
 
 1. **Pre-flight & Discovery (Phase 0)**: Automatically inventories all repository files, classifies file types, detects package managers across 22+ ecosystems, discovers existing test commands (`pytest`, `cargo test`, `npm test`), and verifies clean working tree state.
 2. **Large Codebase Triage (Phase 0.5)**: If the repository exceeds 50 files, prioritizes core business logic, public APIs, and security perimeters while documenting explicit coverage bounds.
 3. **Deep Multi-Perspective Audit (Phases 1–4)**: Interleaves security taint tracking, reliability & concurrency analysis, performance profiling, and testing gap evaluation.
 4. **Severity & Likelihood Gating**: Every finding is validated against strict severity gates. High-severity claims without exposure proof are downgraded or marked `[NEEDS_VERIFICATION]`.
-5. **Deterministic Artifact Assembly**: The `runtime/` engine assembles the executive summary (`HQE_REPORT.md`), 13 canonical markdown deliverables, machine-readable JSON manifests (`HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`), and a deterministic 1–10 health score derived from finding severity.
+5. **Deterministic Artifact Assembly**: The `runtime/` engine assembles the executive summary (`REPORT.md`), 14 canonical Markdown deliverables, and 5 machine-readable JSON artifacts (`PATCH_ACTIONS.json`, `REMEDIATION_PLAN.json`, `VALIDATION_REPORT.json`, `REDACTION_LOG.json`, `REPORT.json`), plus a coverage-aware 1–10 health score.
 
 ---
 
@@ -110,7 +110,7 @@ flowchart TD
 - 🚦 **Severity Gates & Likelihood Models**: CRITICAL/HIGH findings require explicit preconditions, exploitability, blast radius, and likelihood justification.
 - 🧱 **Architectural Cohesion**: Identification of circular dependencies, boundary leaks, tight coupling, and abstraction violations.
 - 🛠️ **Minimal-Change Remediation**: Surgical root-cause fixes adhering to a strict change budget ($\le 5$ files) and anti-regression rules (`[BEHAVIOR CHANGE]`, `[NEW_DEPENDENCY]`).
-- 📋 **Canonical Deliverable System**: Generates 13 HQE audit deliverables — Risk Register, Master TODO, Pattern Findings, Quick Wins vs Structural, Security Posture, Reliability, Testing Gaps, Unknowns, Confidence Declaration, Incident Mini-Report, Patch Actions, Remediation Plan, and Validation Report.
+- 📋 **Canonical Deliverable System**: Generates 14 Markdown audit deliverables — Risk Register, Master TODO Backlog, Pattern Findings, Quick Wins vs Structural, Security Posture Summary, Reliability Summary, Testing Gaps, Unknowns & Verification Plan, Confidence Declaration, Incident Mini-Report, Patch Actions, Remediation Plan, Validation Report, and Redaction Log — plus 5 machine-readable JSON artifacts.
 - 🔒 **Prompt Injection Immunity**: Treats all audited code, fixtures, comments, and instructions as passive untrusted data.
 - ⚙️ **Deterministic Control Plane**: Lightweight Python runtime layer (`runtime/`) maintaining finding lifecycles, session persistence, and reproducible run manifests.
 
@@ -233,16 +233,23 @@ Findings are categorized under the **HQE Finding Taxonomy**:
 }
 ```
 
-### The 9 Canonical Deliverables:
-1. `HQE_RISK_REGISTER.md`: Consolidated risk matrix prioritized by severity and blast radius.
-2. `HQE_MASTER_TODO.md`: Sequenced engineering backlog with effort tiers (S/M/L/XL).
-3. `HQE_PATTERN_FINDINGS.md`: Cross-cutting systemic anti-patterns observed across files.
-4. `HQE_QUICK_WINS.md`: High-impact, low-effort ($S$) improvements vs structural refactors.
-5. `HQE_SECURITY_POSTURE.md`: Attack surface evaluation, trust boundaries, and taint chains.
-6. `HQE_RELIABILITY.md`: Error handling, resource lifecycles, and concurrency analysis.
-7. `HQE_TESTING_GAPS.md`: Untested edge cases, missing failure assertions, and coverage voids.
-8. `HQE_UNKNOWNS.md`: Hypotheses, unverified concerns, and instrumentation guidance.
-9. `HQE_CONFIDENCE.md`: Epistemic declaration of verified facts vs inferences.
+### The 14 Canonical Markdown Deliverables:
+1. `RISK_REGISTER.md`: Consolidated risk matrix prioritized by severity and blast radius.
+2. `MASTER_TODO_BACKLOG.md`: Sequenced engineering backlog with effort tiers (S/M/L).
+3. `PATTERN_FINDINGS.md`: Cross-cutting systemic anti-patterns observed across files.
+4. `QUICK_WINS_VS_STRUCTURAL.md`: High-impact, low-effort ($S$) improvements vs structural refactors.
+5. `SECURITY_POSTURE_SUMMARY.md`: Attack surface evaluation, trust boundaries, and taint chains.
+6. `RELIABILITY_SUMMARY.md`: Error handling, resource lifecycles, and concurrency analysis.
+7. `TESTING_GAPS.md`: Untested edge cases, missing failure assertions, and coverage voids.
+8. `UNKNOWNS_VERIFICATION.md`: Hypotheses, unverified concerns, and instrumentation guidance.
+9. `CONFIDENCE_DECLARATION.md`: Epistemic declaration of verified facts vs inferences.
+10. `INCIDENT_MINI_REPORT.md`: Active CRITICAL/HIGH security incident summary.
+11. `PATCH_ACTIONS.md`: One patch per open finding with validation and rollback.
+12. `REMEDIATION_PLAN.md`: Phased remediation roadmap with exit criteria.
+13. `VALIDATION_REPORT.md`: Validation commands and expected results.
+14. `REDACTION_LOG.md`: Secret-redaction summary and detailed records.
+
+The 5 machine-readable JSON artifacts are: `PATCH_ACTIONS.json`, `REMEDIATION_PLAN.json`, `VALIDATION_REPORT.json`, `REDACTION_LOG.json`, and `REPORT.json`.
 
 ---
 
@@ -330,7 +337,7 @@ The `runtime/` package brings executable control-plane rigor to Skill-HQE withou
 - **`EvidenceStore`** (`runtime/evidence_store.py`): Verification of code evidence triads (`path`, line ranges/anchors, snippets) and automated secret redaction.
 - **`RunManifestGenerator`** (`runtime/run_manifest.py`): Deterministic reproducibility logger capturing git state, tool executions, and coverage metrics.
 - **`FindingRegistry`** (`runtime/finding_registry.py`): Also computes a deterministic 1–10 health score from severity-weighted finding counts.
-- **`ArtifactPipeline`** (`runtime/artifact_pipeline.py`): Deterministic assembly engine for the 13 canonical audit deliverables.
+- **`ArtifactPipeline`** (`runtime/artifact_pipeline.py`): Deterministic assembly engine for the 14 canonical Markdown audit deliverables and 5 JSON artifacts.
 
 ---
 
@@ -359,7 +366,7 @@ All scripts in `scripts/` are standalone, portable Python 3.10+ utilities:
 ./scripts/validate_semantics.py findings.json
 
 # 7. Assemble canonical audit deliverables from findings JSON
-./scripts/build_artifacts.py --findings findings.json --output-dir ./audit-output
+./scripts/build_artifacts.py findings.json --output-dir ./audit-output
 
 # 8. Check internal structural integrity and links of Skill-HQE
 ./scripts/check_skill.py .

@@ -61,6 +61,15 @@ jobs:
           python scripts/validate_manifest.py tests/fixtures/sample_manifest.json
           python scripts/validate_session_log.py tests/fixtures/sample_session_log.json
 
+      - name: Wheel Smoke Test
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel
+          python -m venv /tmp/hqe-wheel-smoke
+          /tmp/hqe-wheel-smoke/bin/pip install --upgrade pip
+          /tmp/hqe-wheel-smoke/bin/pip install dist/skill_hqe-*.whl
+          /tmp/hqe-wheel-smoke/bin/python -c "from runtime import FindingRegistry, ArtifactPipeline, RunManifestGenerator; print('wheel import ok')"
+
       - name: Git Clean Validation
         if: always()
         run: |

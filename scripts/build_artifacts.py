@@ -37,7 +37,7 @@ def main() -> int:
 
     raw_findings = data if isinstance(data, list) else [data]
 
-    registry = FindingRegistry()
+    registry = FindingRegistry(repo_root=Path.cwd())
     registry.load_many(raw_findings)
 
     session = None

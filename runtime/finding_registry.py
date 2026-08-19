@@ -92,6 +92,11 @@ class Finding:
         if not self.evidence:
             errors.append(f"Finding '{self.id}' must have at least one evidence item")
 
+        for ev_idx, ev in enumerate(self.evidence):
+            ev_errors = ev.validate()
+            for err in ev_errors:
+                errors.append(f"Finding '{self.id}' evidence[{ev_idx}]: {err}")
+
         # Severity Gate check for CRITICAL / HIGH
         if self.severity in ("CRITICAL", "HIGH"):
             if not self.preconditions:
@@ -228,9 +233,10 @@ def _schema_validation_errors(finding: "Finding") -> list[str]:
 
 
 class FindingRegistry:
-    def __init__(self):
+    def __init__(self, repo_root: Path | str | None = None):
         self.findings: dict[str, Finding] = {}
         self._history: dict[str, list[dict[str, Any]]] = {}
+        self.repo_root: Path | None = Path(repo_root).resolve() if repo_root else None
 
     def _record_transition(
         self,
@@ -264,8 +270,16 @@ class FindingRegistry:
 
         Registration validates each finding (semantic rules + schema); the
         first invalid finding raises, matching the previous per-item loop.
+
+        When ``repo_root`` was provided at construction time, evidence is
+        re-verified against disk before registration. Imported verification
+        metadata is never trusted.
         """
         loaded = [Finding.from_dict(raw) for raw in raw_findings]
+        if self.repo_root is not None:
+            for finding in loaded:
+                for ev in finding.evidence:
+                    ev.verify(self.repo_root)
         for finding in loaded:
             self.register(finding)
         return loaded
@@ -277,23 +291,25 @@ class FindingRegistry:
         return list(self._history.get(finding_id, []))
 
     def update(self, finding_id: str, **kwargs: Any) -> Finding:
-        """Explicitly update mutable fields of a registered finding while enforcing invariants."""
+        """Explicitly update mutable fields of a registered finding while enforcing invariants.
+
+        Status changes are not permitted through this method; use
+        :meth:`transition_status` instead. Finding IDs are immutable after
+        registration.
+        """
         finding = self.findings.get(finding_id)
         if not finding:
             raise KeyError(f"Finding '{finding_id}' not found in registry")
 
+        if "status" in kwargs:
+            raise ValueError(
+                "Status changes must use transition_status(), not update()"
+            )
+        if "id" in kwargs:
+            raise ValueError("Finding id is immutable after registration")
+
         # Snapshot attributes for atomic rollback on validation failure
         backup = {k: getattr(finding, k) for k in kwargs if hasattr(finding, k)}
-
-        # Status changes MUST follow lifecycle transition rules
-        if "status" in kwargs:
-            new_status = kwargs["status"]
-            if new_status != finding.status:
-                allowed = TRANSITION_GRAPH.get(finding.status, set())
-                if new_status not in allowed:
-                    raise ValueError(f"invalid transition from '{finding.status}' to '{new_status}'")
-                if new_status == "VERIFIED" and not finding.validation and not kwargs.get("validation"):
-                    raise ValueError("VERIFIED status requires verification evidence or validation commands")
 
         for key, value in kwargs.items():
             if not hasattr(finding, key):

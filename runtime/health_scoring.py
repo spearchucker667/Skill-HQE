@@ -111,21 +111,21 @@ def compute_health_score(
 ) -> HealthScore:
     """Compute a coverage-aware health score.
 
-    If there are no findings and coverage is not known, the score is omitted
-    instead of claiming a perfect 10.  When coverage is known, the numeric
-    score is computed from findings and annotated with the appropriate band
-    and explanatory reasons.
+    A numeric score is only reported when coverage is known.  When coverage is
+    not known the score is omitted, regardless of whether findings exist, to
+    avoid implying a health rating for an only-partially-examined repository.
     """
     unreviewed_surfaces = unreviewed_surfaces or []
 
-    if not findings and not coverage_known:
-        return HealthScore(
-            score=None,
-            omitted=True,
-            reasons=[
-                "No findings recorded and coverage is unknown; score omitted to avoid a false-perfect claim"
-            ],
-        )
+    if not coverage_known:
+        reasons = [
+            "Coverage not fully established; score omitted to avoid a false-perfect claim for a partially examined repository"
+        ]
+        if unreviewed_surfaces:
+            reasons.append(
+                f"{len(unreviewed_surfaces)} unreviewed surface(s) may affect confidence"
+            )
+        return HealthScore(score=None, omitted=True, reasons=reasons)
 
     score = score_from_findings(findings)
     reasons = [f"Evaluated against HQE v5 rubric (coverage depth: {coverage_depth})"]
@@ -134,8 +134,5 @@ def compute_health_score(
         reasons.append(
             f"{len(unreviewed_surfaces)} unreviewed surface(s) may affect confidence"
         )
-
-    if not coverage_known:
-        reasons.append("Coverage not fully established; score reflects known findings only")
 
     return HealthScore(score=score, omitted=False, reasons=reasons)

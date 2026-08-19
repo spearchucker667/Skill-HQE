@@ -308,18 +308,18 @@
           "type": "object",
           "properties": {
             "critical_and_high_max_total": {
-              "type": "integer",
+              "type": ["integer", "null"],
               "minimum": 10,
               "maximum": 100
             },
-            "medium_max": {
+            "medium_max_per_category": {
               "type": "integer",
-              "minimum": 10,
+              "minimum": 5,
               "maximum": 100
             },
-            "low_max_one_liners": {
+            "low_and_info_max_per_category": {
               "type": "integer",
-              "minimum": 10,
+              "minimum": 5,
               "maximum": 100
             }
           }

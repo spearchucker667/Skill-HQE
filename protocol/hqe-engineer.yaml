@@ -391,9 +391,9 @@ anti_patterns:
     '
 output_controls:
   size_limits:
-    critical_and_high_max_total: 30
-    medium_max: 25
-    low_max_one_liners: 20
+    critical_and_high_max_total: null
+    medium_max_per_category: 15
+    low_and_info_max_per_category: 10
     overflow_handling: 'Report: (a) estimated additional count, (b) recurring pattern name,
 
       (c) up to 5 representative locations

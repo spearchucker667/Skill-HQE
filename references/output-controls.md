@@ -18,8 +18,8 @@ This reference defines how HQE manages token budgets, artifact output volumes, a
 | Profile | Target Context | Delivered Artifacts |
 | :--- | :--- | :--- |
 | **Brief** | PR review, single-issue remediation | Summary report, primary finding(s), verification command |
-| **Standard** | Targeted bug hunt, subsystem audit | `HQE_REPORT.md`, `HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`, `HQE_SESSION_LOG.json` |
-| **Exhaustive** | Full repository audit | All 9 canonical markdown artifacts + `HQE_REPORT.md`, `HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`, `HQE_SESSION_LOG.json` |
+| **Standard** | Targeted bug hunt, subsystem audit | `REPORT.md`, `HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`, `HQE_SESSION_LOG.json` |
+| **Exhaustive** | Full repository audit | All 14 canonical Markdown artifacts + `REPORT.md`, `REPORT.json`, `HQE_FINDINGS.json`, `HQE_RUN_MANIFEST.json`, `HQE_SESSION_LOG.json` |
 
 ---
 

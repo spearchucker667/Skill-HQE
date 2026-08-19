@@ -54,14 +54,14 @@ def test_known_coverage_with_no_findings_returns_perfect():
     assert any("full" in r for r in result.reasons)
 
 
-def test_unknown_coverage_with_findings_reports_numeric_score():
+def test_unknown_coverage_with_findings_omits_score():
     registry = FindingRegistry()
-    # Two MEDIUM findings: 100 - 8 - 8 = 84 → maps to 8.
+    # Two MEDIUM findings: 100 - 8 - 8 = 84 → maps to 8, but coverage is unknown.
     registry.register(_make_finding("HQE-BUG-001", "MEDIUM"))
     registry.register(_make_finding("HQE-BUG-002", "MEDIUM"))
     result = registry.health_score()
-    assert result.omitted is False
-    assert result.score == 8
+    assert result.omitted is True
+    assert result.score is None
 
 
 def test_multiple_findings_score():
